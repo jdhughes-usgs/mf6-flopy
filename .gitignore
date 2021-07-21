@@ -274,3 +274,8 @@ TSWLatexianTemp*
 
 # Makeindex log files
 *.lpz
+
+
+# Repo exclusions
+notebooks/temp/
+.ipynb_checkpoints/
