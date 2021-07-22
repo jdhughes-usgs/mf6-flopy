@@ -30,8 +30,13 @@
 \def\Authors{Joseph D. Hughes\,$^{1,*}$, Christian D. Langevin\,$^{2}$, Scott R. Paulinski\,$^{3}$, Joshua D. Larsen\,$^{4}$ and David Brakenhoff\,$^{5}$}
 % Affiliations should be keyed to the author's name with superscript numbers and be listed as follows: Laboratory, Institute, Department, Organization, City, State abbreviation (USA, Canada, Australia), and Country (without detailed address information such as city zip codes or street names).
 % If one of the authors has a change of address, list the new address below the correspondence details using a superscript symbol and use the same symbol to indicate the author in the author list.
-\def\Address{$^{1}$Laboratory X, Institute X, Department X, Organization X, City X , State XX (only USA, Canada and Australia), Country X \\
-$^{2}$Laboratory X, Institute X, Department X, Organization X, City X , State XX (only USA, Canada and Australia), Country X  }
+\def\Address{
+$^{1}$U.S. Geological Survey, Earth Systems Modeling Branch, 927 W Belle Plaine Ave, Chicago, IL, USA \\
+$^{2}$U.S. Geological Survey, Earth Systems Modeling Branch, 2280 Woodale Dr, Mounds View, MN, USA \\
+$^{3}$U.S. Geological Survey, California Water Science Center, 4165 Spruance Road, Suite 200, San Diego, CA, USA \\
+$^{4}$U.S. Geological Survey, California Water Science Center, 6000 J Street, Placer Hall, Sacramento, CA, USA \\
+$^{5}$Artesia Water, Korte Weistraat 12, Schoonhoven, Netherlands  
+}
 % The Corresponding Author should be marked with an asterisk
 % Provide the exact contact address (this time including street name and city zip code) and email of the corresponding author
 \def\corrAuthor{Corresponding Author}
@@ -45,7 +50,7 @@ $^{2}$Laboratory X, Institute X, Department X, Organization X, City X , State XX
 \onecolumn
 \firstpage{1}
 
-\title[Running Title]{Make the Best Models Ever with FloPy} 
+\title[FloPy]{Modern and Reproducible Groundwater Modeling Workflows with FloPy} 
 
 \author[\firstAuthorLast ]{\Authors} %This field will be automatically populated
 \address{} %This field will be automatically populated
@@ -74,28 +79,36 @@ As a primary goal, the abstract should render the general significance and conce
 \section{Introduction}
 %For Original Research Articles \citep{conference}, Clinical Trial Articles \citep{article}, and Technology Reports \citep{patent}, the introduction should be succinct, with no subheadings \citep{book}. For Case Reports the Introduction should include symptoms at presentation \citep{chapter}, physical exams and lab results \citep{dataset}.
 
-This is FloPy \citep{bakker2016scripting}.
-
-MODFLOW 6 supports multiple models (), multiple packages of the same type, unstructured grids, ... giving the statement of the problem
-
-How we now handle support for rapidly evolving mf6
+FloPy is a popular python package for building, running, and post processing groundwater models.  \cite{bakker2016scripting} describe the general approach for working with models within the python environment and emphasize the reproducible nature of developing models through scripting.  FloPy has continued to advance since it was first described by \cite{bakker2016scripting}.  The purpose of this paper is to highlight some of these important advances, provide examples that demonstrate these new capabilities, and reinforce the advantages of the modern scripting workflow for developing reproducible groundwater models that can be easily updated as new data become available.  The important advances described here can be summarized as
 
 \begin{itemize}
-\item Rethinking how to handle new or changing input using automated class generation for models and packages; codevelopment of the simulation code and the FloPy support utilities at the same time using definition files as the common link. Allows new mf6 capabilities to be immediately supported and testable with FloPy
-
-\item Support Structured and Unstructured Grids from the bottom up
-
-\item Implement new processing capabilities so that users can rapidly construct modelsGeospatial Processing
-
-\item easier access of Model Results
-
+\item instantaneous and robust support for all MODFLOW 6 models, packages, and options,
+\item generalized support for structured and unstructured model grids,
+\item implementation of new geoprocessing capabilities to rapidly populate models with data, and
+\item simplified access to model results.
 \end{itemize}
+
+\section{Overview of MODFLOW 6}
+
+The most recent version of MODFLOW (MODFLOW 6) is an object-oriented program and framework developed to provide a platform for supporting multiple models and multiple types of models within the same simulation \citep{modflow6gwf, modflow6framework}. These models can be independent of one another with no interaction, they can exchange information, or they can be tightly coupled at the matrix level by adding them to the same numerical solution. Transfer of information between models is isolated to exchange objects, which allow models to be developed and used independently. Within this new framework, a regional-scale groundwater model may be coupled with multiple local-scale groundwater models. 
+
+MODFLOW 6 currently includes the Groundwater Flow (GWF) Model and the Groundwater Transport (GWT) Model each with packages to represent surface water processes,  groundwater extraction, external boundaries, mass sources and sinks, and mass sorption and reactions.  GWF and GWT models can be developed using regular model grids consisting of layers, rows, and columns or they can be developed using more general unstructured grids using many of the concepts and numerical approaches available in MODFLOW-USG  \citep{modflowusg}.  MODFLOW 6 also includes advanced features to simulate three-dimensional anisotropy and dispersion \citep{modflow6xt3d} and correct grid errors for cell connections that violate generalized control-volume finite-difference assumptions.
+
+Development and testing of the MODFLOW 6 program relies heavily on tight integration with FloPy.  A key component of this tight integration is the capability to instantaneously support new MODFLOW 6 models and packages with FloPy.  Unlike the FloPy support for previous MODFLOW versions (for example, MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, and SEAWAT), the FloPy python classes for MODFLOW 6 are dynamically generated from simple text files that describe the input file structure.  
 
 \section{Common Modeling Tasks}
 
 \subsection{Generating Grids}
 
-structured grid, triangular mesh, quadtree grid, voronoi
+Support for a variety of different structured and unstructured grid types has been a recent focus of MODFLOW development \citep{modflowusg, modflow6gwf, modflow6xt3d}.  FloPy routines have been updated to support generation and processing of several different grid types, such as the ones shown in figure \ref{fig:grids}.  
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[width=15cm]{figures/grids.png}
+\end{center}
+\caption{Examples of grids that can be generated and processed using FloPy, including (A) a regular MODFLOW grid, (B) a quadtree grid, (C) a triangular grid, and (D) a voronoi grid}\label{fig:grids}
+\end{figure}
+
 
 \subsection{Geospatial Processing}
 
