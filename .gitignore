@@ -279,3 +279,4 @@ TSWLatexianTemp*
 # Repo exclusions
 notebooks/temp/
 .ipynb_checkpoints/
+doc/figures/~*
