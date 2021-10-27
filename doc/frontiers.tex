@@ -79,13 +79,23 @@ As a primary goal, the abstract should render the general significance and conce
 \section{Introduction}
 %For Original Research Articles \citep{conference}, Clinical Trial Articles \citep{article}, and Technology Reports \citep{patent}, the introduction should be succinct, with no subheadings \citep{book}. For Case Reports the Introduction should include symptoms at presentation \citep{chapter}, physical exams and lab results \citep{dataset}.
 
-% todo:
-%   - should mention something about flopy being teachable?
 
+FloPy is a popular Python package for constructing, running, and post processing MODFLOW-based groundwater models.  It is open source and developed with input from a growing community of modelers.  
 
-FloPy is a popular python package for building, running, and post processing groundwater models.  It is open source and developed with input from a growing community of modelers.  \cite{bakker2016scripting} describe the general approach for working with models within the python environment and emphasize the reproducible nature of developing models through scripting.  FloPy has continued to advance since it was first described by \cite{bakker2016scripting}.  The purpose of this paper is to highlight some of these important advances, provide examples that demonstrate these new capabilities, and reinforce the advantages of the modern scripting workflow for developing reproducible groundwater models that can be easily updated as new data become available.  The important advances described here can be summarized as
+It has been recommended as one way to facilitate repeatable research and sharing of ideas \citep{fienen2016}
+
+We have FloPy to be particularly useful for teaching.  Annotated Jupyter notebooks, comparison with analytical solutions, ...
+
+We rely on FloPy for MODFLOW development.  We write tests that rely on FloPy to construct and run models, and then read output.  We then verify that the output is as expected, by using the results from an analytical solution, results from another model, or results that have been confirmed to be correct.
+
+We use FloPy to load models
+
+ FloPy is used to pioneer new methods and analysis tools, such as deep learning approaches for improving groundwater model calibration \citep{sun2018, zhou2021}, regionalization of residence times using metamodeling \citep{starn2018}, iterative ensemble approaches for calibration and uncertainty quantification \citep{white2018ies}, and exploration of alternative parameterization schemes for risk analysis \citep{knowling2019}. There are numerous examples of constructing MODFLOW models to solve applied groundwater problems \citep{befus2017, vanengelen2018, ebeling2019, zipper2019, befus2020}.  Used in GIS-based tools, such as FREEWAT \citep{freewat2018} and other cyberinfrastructures \citep{essawy2018} to export models into MODFLOW datasets.  FloPy can also be used as the ``glue'' to help couple MODFLOW to other hydrological models \citep{burek2020} or even to agent-based models designed to quantify the effects of decision makers on environmental behavior \citep{jaxarozen2019}. 
+
+\cite{bakker2016scripting} describe the general approach for working with models within the python environment and emphasize the reproducible nature of developing models through scripting.  FloPy has continued to advance since it was first described by \cite{bakker2016scripting}.  The purpose of this paper is to highlight some of these important advances, provide examples that demonstrate these new capabilities, and reinforce the advantages of the modern scripting workflow for developing reproducible groundwater models that can be easily updated as new data become available.  The important advances described here can be summarized as
 
 \begin{itemize}
+\item expanded support for MODFLOW-2005, MODFLOW-NWT, MODFLOW-LGR, MODFLOW-USG, SEAWAT, MT3D, MT3D-USGS
 \item rapid and robust support for all MODFLOW 6 models, packages, and options,
 \item generalized support for structured and unstructured model grids,
 \item implementation of new geoprocessing capabilities to rapidly populate models with data, 
@@ -94,13 +104,14 @@ FloPy is a popular python package for building, running, and post processing gro
 \item simplified access to model results.
 \end{itemize}
 
+
 \section{FloPy Support for MODFLOW 6}
 
-The most recent version of MODFLOW (MODFLOW 6) is an object-oriented program and framework developed to provide a platform for supporting multiple models and multiple types of models within the same simulation \citep{modflow6gwf, modflow6framework}. These models can be independent of one another with no interaction, they can exchange information, or they can be tightly coupled at the matrix level by adding them to the same numerical solution. Transfer of information between models is isolated to exchange objects, which allow models to be developed and used independently. Within this new framework, a regional-scale groundwater model may be coupled with multiple local-scale groundwater models. 
+The most recent version of MODFLOW (MODFLOW 6) is an object-oriented program and framework developed to provide a platform for supporting multiple models and multiple types of models within the same simulation \citep{modflow6gwf, modflow6framework, morway2021use}. These models can be independent of one another with no interaction, they can exchange information, or they can be tightly coupled at the matrix level by adding them to the same numerical solution. Transfer of information between models is isolated to exchange objects, which allow models to be developed and used independently. Within this new framework, a regional-scale groundwater model may be coupled with multiple local-scale groundwater models. 
 
-MODFLOW 6 currently includes the Groundwater Flow (GWF) Model and the Groundwater Transport (GWT) Model each with packages to represent surface water processes,  groundwater extraction, external boundaries, mass sources and sinks, and mass sorption and reactions.  GWF and GWT models can be developed using regular model grids consisting of layers, rows, and columns or they can be developed using more general unstructured grids using many of the concepts and numerical approaches available in MODFLOW-USG  \citep{modflowusg}.  MODFLOW 6 also includes advanced features to simulate three-dimensional anisotropy and dispersion \citep{modflow6xt3d} and correct grid errors for cell connections that violate generalized control-volume finite-difference assumptions.
+MODFLOW 6 currently includes the Groundwater Flow (GWF) Model and the Groundwater Transport (GWT) Model each with packages to represent surface water processes,  groundwater extraction, external boundaries, mass sources and sinks, and mass sorption and reactions.  GWF and GWT models can be developed using regular model grids consisting of layers, rows, and columns or they can be developed using more general unstructured grids using many of the concepts and numerical approaches available in MODFLOW-USG  \citep{modflowusg}.  MODFLOW 6 also includes advanced formulations to simulate three-dimensional anisotropy and dispersion \citep{modflow6xt3d}, coupled variable-density groundwater flow and transport \citep{langevin2020hydraulic}, and a water mover package to represent natural and managed hydrologic connections \citep{morway2021use}.
 
-Development and testing of the MODFLOW 6 program relies heavily on tight integration with FloPy.  A key component of this tight integration is the capability to quickly support new MODFLOW 6 models and packages with FloPy.  Unlike the FloPy support for previous MODFLOW versions (for example, MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, and SEAWAT), the FloPy python classes for MODFLOW 6 are dynamically generated from simple text files that describe the input file structure.  This allows MODFLOW 6 developers to write tests for new models, packages, and functionality as they are developed.  All MODFLOW 6 model input files are described using ``definition files.''  These definition files are used to generate the user input and output guide.  These same definition files are also used to generate FloPy classes.
+Development and testing of the MODFLOW 6 program relies heavily on tight integration with FloPy.  A key component of this tight integration is the capability to quickly support new MODFLOW 6 models and packages with FloPy.  Unlike the FloPy support for previous MODFLOW versions (for example, MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, and SEAWAT), the FloPy python classes for MODFLOW 6 are dynamically generated from simple text files that describe the input file structure.  This allows MODFLOW 6 developers to write tests for new models, packages, and functionality as they are developed.  All MODFLOW 6 model input files are described using ``definition files.''  These definition files are used to generate the user input and output guide.  These same definition files are also used to generate FloPy classes, with argument docstrings corresponding to input variable descriptions in the input and output guide.
 
 \begin{figure}[h!]
 \begin{center}
@@ -114,9 +125,12 @@ Development and testing of the MODFLOW 6 program relies heavily on tight integra
 
 \subsection{Generating Grids}
 
-Support for a variety of different structured and unstructured grid types has been a recent focus of MODFLOW development \citep{modflowusg, modflow6gwf, modflow6xt3d}.  FloPy routines have been updated to support generation and processing of several different grid types, such as the ones shown in figure \ref{fig:grids}.  
+Support for a variety of different structured and unstructured grid types has been a recent focus of MODFLOW development \citep{modflowusg, modflow6gwf, modflow6xt3d}.  FloPy has been updated to support processing of different types of grids, such as those shown in figure \ref{fig:grids} through implementation of several different grid classes.  The regular MODFLOW grid consisting of layers, rows, and columns, continues to be a popular type of MODFLOW grid.  Regular MODFLOW grids can have constant row and column spacings, as shown in Figure \ref{fig:grids}A, or they can have variable row and column spacings to focus resolution around an area of interest, as shown in Figure \ref{fig:grids}B.  FloPy internally represents this type of grid as a StructuredGrid object.  
 
-Define and cite regular MODFLOW grid, then irregularly spaced structured grid, then nested grid (cite LGR), then quadtree grid refinement; then cite triangle and then cite voronoi grid (SciPy and also cite any groundwater papers, algomesh?).
+Nested grid \citep{modflowlgr2}
+quadtree grid refinement \citep{gridgen}; 
+then cite triangle \citep{trianglemesh} and 
+then cite voronoi grid \citep{2020SciPy-NMeth} cite any groundwater papers? algomesh?).
 
 FloPy gridding allows for innovation; mention Central Sands and the ability to simulate local-scale detail and regional-scale influence in the same simulation?
 
