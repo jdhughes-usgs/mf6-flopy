@@ -1,5 +1,5 @@
 \documentclass[11pt, oneside]{article}   	% use "amsart" instead of "article" for AMSLaTeX format
-\usepackage{geometry}                		% See geometry.pdf to learn the layout options. There are lots.
+\usepackage[margin=2.25cm]{geometry}                		% See geometry.pdf to learn the layout options. There are lots.
 \geometry{letterpaper}                   		% ... or a4paper or a5paper or ... 
 %\geometry{landscape}                		% Activate for rotated page geometry
 %\usepackage[parfill]{parskip}    		% Activate to begin paragraphs with an empty line rather than an indent
@@ -98,10 +98,11 @@ MODFLOW 6 currently includes the Groundwater Flow (GWF) Model and the Groundwate
 Development and testing of the MODFLOW 6 program relies heavily on tight integration with FloPy.  A key component of this tight integration is the capability to quickly support new MODFLOW 6 models and packages with FloPy.  Unlike the FloPy support for previous MODFLOW versions (for example, MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, and SEAWAT), the FloPy python classes for MODFLOW 6 are dynamically generated from simple text files that describe the input file structure.  This allows MODFLOW 6 developers to write tests for new models, packages, and functionality as they are developed.  All MODFLOW 6 model input files are described using ``definition files.''  These definition files are used to generate the user input and output guide.  These same definition files are also used to generate FloPy classes, with argument docstrings corresponding to input variable descriptions in the input and output guide.
 
 \begin{figure}[h!]
-\begin{center}
-\includegraphics[width=15cm]{figures/mf6definition.pdf}
-\end{center}
-\caption{Relation between MODFLOW 6 definition files and the MODFLOW 6 input and output guide and the FloPy Python classes for MODFLOW 6.}\label{fig:mf6definition}
+	\begin{center}
+		\includegraphics{figures/mf6definition.pdf}
+	\end{center}
+	\caption{Relation between MODFLOW 6 input description files and the MODFLOW 6 input and output guide and the FloPy Python classes for MODFLOW 6.}
+	\label{fig:mf6definition}
 \end{figure}
 
 
@@ -120,15 +121,40 @@ FloPy gridding allows for innovation; mention Central Sands and the ability to s
 
 \begin{figure}[ht!]
 \begin{center}
-\includegraphics[width=15cm]{figures/grids.png}
+\includegraphics{figures/grids.png}
 \end{center}
-\caption{Examples of grids that can be generated and processed using FloPy, including (A) a regular structured MODFLOW grid, (B) a structured MODFLOW grid with irregular spacing, (C) a regular MODFLOW child grid nested within a regular MODFLOW parent grid, (D) a quadtree grid, (D) a triangular grid, and (E) a voronoi grid}\label{fig:grids}
+\caption{Examples of grids that can be generated and processed using FloPy for a hypothetical watershed, including (A) a regular structured MODFLOW grid, (B) a structured MODFLOW grid with irregular spacing, (C) a regular MODFLOW child grid nested within a regular MODFLOW parent grid, (D) a quadtree grid, (D) a triangular grid, and (E) a voronoi grid}\label{fig:grids}
 \end{figure}
 
 
 \subsection{Geospatial Processing}
 
 Intersections, raster resampling, ...
+
+\begin{figure}[ht!]
+	\begin{center}
+		\includegraphics{figures/fine_topo.png}
+	\end{center}
+	\caption{High resolution digital elevation model of a hypothetical watershed.}
+	\label{fig:dem}
+\end{figure}
+
+\begin{figure}[ht!]
+	\begin{center}
+		\includegraphics{figures/grids_geoprocessing.png}
+	\end{center}
+	\caption{Examples of the high resolution digital elevation model shown in figure~\ref{fig:dem} resampled on MODFLOW grids shown in figure~\ref{fig:grids} using FloPy, including (A) a regular structured MODFLOW grid, (B) a structured MODFLOW grid with irregular spacing, (C) a regular MODFLOW child grid nested within a regular MODFLOW parent grid, (D) a quadtree grid, (D) a triangular grid, and (E) a voronoi grid.}
+	\label{fig:geoprocessing}
+\end{figure}
+
+\begin{figure}[ht!]
+	\begin{center}
+		\includegraphics{figures/grids_intersection.png}
+	\end{center}
+	\caption{Examples of the intersection of a linear stream network and MODFLOW grids shown in figure~\ref{fig:grids} using FloPy, including (A) a regular structured MODFLOW grid, (B) a structured MODFLOW grid with irregular spacing, (C) a regular MODFLOW child grid nested within a regular MODFLOW parent grid, (D) a quadtree grid, (D) a triangular grid, and (E) a voronoi grid. The shaded cells represent cells that intersect the river network. The plots are centered on the location of the child grid shown in figure~\ref{fig:grids}C.}
+	\label{fig:intersections}
+\end{figure}
+
 
 \subsection{Plotting}
 
