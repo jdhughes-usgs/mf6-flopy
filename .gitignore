@@ -279,6 +279,8 @@ TSWLatexianTemp*
 # Repo exclusions
 notebooks/temp/
 notebooks/temp_topo/
+notebooks/triangle_data/
+notebooks/figures/
 .ipynb_checkpoints/
 doc/figures/~*
 doc/*.pdf
