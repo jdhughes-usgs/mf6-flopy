@@ -276,6 +276,9 @@ TSWLatexianTemp*
 *.lpz
 
 
+# python
+__pycache__/
+
 # Repo exclusions
 notebooks/temp/
 notebooks/temp_topo/

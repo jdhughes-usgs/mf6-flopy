@@ -19,14 +19,14 @@
 
 \usepackage{natbib}
 
+\usepackage{lipsum}  
+
 \hypersetup{
     colorlinks,
     linkcolor={red!50!black},
     citecolor={blue!50!black},
     urlcolor={blue!80!black}
 }
-
-\linenumbers
 
 
 \author{Joseph D. Hughes}
@@ -91,20 +91,19 @@ We use FloPy to load models
 
 \section{FloPy Support for MODFLOW 6}
 
-The most recent version of MODFLOW (MODFLOW 6) is an object-oriented program and framework developed to provide a platform for supporting multiple models and multiple types of models within the same simulation \citep{modflow6gwf, modflow6framework, morway2021use}. These models can be independent of one another with no interaction, they can exchange information, or they can be tightly coupled at the matrix level by adding them to the same numerical solution. Transfer of information between models is isolated to exchange objects, which allow models to be developed and used independently. Within this new framework, a regional-scale groundwater model may be coupled with multiple local-scale groundwater models. 
+The most recent version of MODFLOW (MODFLOW 6) is an object-oriented program and framework developed to provide a platform for supporting multiple models and multiple types of models within the same simulation \citep{modflow6gwf, modflow6framework, morway2021use}. These models can be independent of one another with no interaction, they can exchange coefficients and dependent variables (for example, head), or they can be tightly coupled at the matrix level by adding them to the same numerical solution. Transfer of information between models is isolated to exchange objects, which allow models to be developed and used independently. Within this new framework, a regional-scale groundwater model may be coupled with multiple local-scale groundwater models. 
 
 MODFLOW 6 currently includes the Groundwater Flow (GWF) Model and the Groundwater Transport (GWT) Model each with packages to represent surface water processes,  groundwater extraction, external boundaries, mass sources and sinks, and mass sorption and reactions.  GWF and GWT models can be developed using regular model grids consisting of layers, rows, and columns or they can be developed using more general unstructured grids using many of the concepts and numerical approaches available in MODFLOW-USG  \citep{modflowusg}.  MODFLOW 6 also includes advanced formulations to simulate three-dimensional anisotropy and dispersion \citep{modflow6xt3d}, coupled variable-density groundwater flow and transport \citep{langevin2020hydraulic}, and a water mover package to represent natural and managed hydrologic connections \citep{morway2021use}.
 
 Development and testing of the MODFLOW 6 program relies heavily on tight integration with FloPy.  A key component of this tight integration is the capability to quickly support new MODFLOW 6 models and packages with FloPy.  Unlike the FloPy support for previous MODFLOW versions (for example, MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, and SEAWAT), the FloPy python classes for MODFLOW 6 are dynamically generated from simple text files that describe the input file structure.  This allows MODFLOW 6 developers to write tests for new models, packages, and functionality as they are developed.  All MODFLOW 6 model input files are described using ``definition files.''  These definition files are used to generate the user input and output guide.  These same definition files are also used to generate FloPy classes, with argument docstrings corresponding to input variable descriptions in the input and output guide.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
 	\begin{center}
 		\includegraphics{figures/mf6definition.pdf}
 	\end{center}
 	\caption{Relation between MODFLOW 6 input description files and the MODFLOW 6 input and output guide and the FloPy Python classes for MODFLOW 6.}
 	\label{fig:mf6definition}
 \end{figure}
-
 
 \section{Common Modeling Tasks}
 
@@ -120,34 +119,19 @@ then cite voronoi grid \citep{2020SciPy-NMeth} cite any groundwater papers? algo
 FloPy gridding allows for innovation; mention Central Sands and the ability to simulate local-scale detail and regional-scale influence in the same simulation?
 
 \begin{figure}[ht!]
-\begin{center}
-\includegraphics{figures/grids.png}
-\end{center}
-\caption{Examples of grids that can be generated and processed using FloPy for a hypothetical watershed, including (A) a regular structured MODFLOW grid, (B) a structured MODFLOW grid with irregular spacing, (C) a regular MODFLOW child grid nested within a regular MODFLOW parent grid, (D) a quadtree grid, (D) a triangular grid, and (E) a voronoi grid}\label{fig:grids}
+	\begin{center}
+		\includegraphics{figures/grids_geoprocessing.png}
+	\end{center}
+	\caption{Examples of grids that can be generated and processed using FloPy for a hypothetical watershed, including (A) a regular structured MODFLOW grid, (B) a structured MODFLOW grid with irregular spacing, (C) a regular MODFLOW child grid nested within a regular MODFLOW parent grid, (D) a quadtree grid, (D) a triangular grid, and (E) a voronoi grid}\label{fig:grids}
 \end{figure}
-
 
 \subsection{Geospatial Processing}
 
 Intersections, raster resampling, ...
 
-\begin{figure}[h]
-	\begin{center}
-		\includegraphics{figures/fine_topo.png}
-	\end{center}
-	\caption{High resolution digital elevation model of a hypothetical watershed.}
-	\label{fig:dem}
-\end{figure}
+\lipsum[102-108]
 
-\begin{figure}[h]
-	\begin{center}
-		\includegraphics{figures/grids_geoprocessing.png}
-	\end{center}
-	\caption{Examples of the high resolution digital elevation model shown in figure~\ref{fig:dem} resampled on MODFLOW grids shown in figure~\ref{fig:grids} using FloPy, including (A) a regular structured MODFLOW grid, (B) a structured MODFLOW grid with irregular spacing, (C) a regular MODFLOW child grid nested within a regular MODFLOW parent grid, (D) a quadtree grid, (D) a triangular grid, and (E) a voronoi grid.}
-	\label{fig:geoprocessing}
-\end{figure}
-
-\begin{figure}[h]
+\begin{figure}[ht!]
 	\begin{center}
 		\includegraphics{figures/grids_intersection.png}
 	\end{center}
@@ -155,10 +139,11 @@ Intersections, raster resampling, ...
 	\label{fig:intersections}
 \end{figure}
 
-
 \subsection{Plotting}
 
-\begin{figure}[h]
+\lipsum[52-58]
+
+\begin{figure}[ht!]
 	\begin{center}
 		\includegraphics{figures/grids_flopy_plots.png}
 	\end{center}
@@ -166,14 +151,29 @@ Intersections, raster resampling, ...
 	\label{fig:flopyplots}
 \end{figure}
 
+\lipsum[2-4]
 
 \subsection{Exporting Grid Data to Other Formats}
 
 shapefiles (all grids), VTK (all grids) and NetCDF (structured grids)
 
+\lipsum[2-6]
+
+\begin{figure}[ht!]
+	\begin{center}
+		\includegraphics{figures/mf6vtk.pdf}
+	\end{center}
+	\caption{FloPy export.}
+	\label{fig:flopyvtk}
+\end{figure}
+
+\lipsum[2-4]
+
 \section{Example}
 
 Background of the McDonald Valley
+
+\lipsum[12-18]
 
 \begin{figure}[ht!]
 	\begin{center}
@@ -183,30 +183,27 @@ Background of the McDonald Valley
 	\label{fig:mvgrid}
 \end{figure}
 
-\begin{figure}[ht!]
-	\begin{center}
-		\includegraphics{figures/mv_voronoi_top.png}
-	\end{center}
-	\caption{McDonald Valley topography.}
-	\label{fig:mvtop}
-\end{figure}
+\lipsum[2-4]
 
 \begin{figure}[ht!]
 	\begin{center}
-		\includegraphics{figures/mv_voronoi_head.png}
+		\includegraphics{figures/mv_voronoi_map.png}
 	\end{center}
-	\caption{McDonald Valley head.}
-	\label{fig:mvhead}
+	\caption{McDonald Valley topography and head.}
+	\label{fig:mvmap}
 \end{figure}
 
-\begin{figure}[h]
+\lipsum[2-4]
+
+\begin{figure}[ht!]
 	\begin{center}
-		\includegraphics{figures/mv_voronoi_dtw.png}
+		\includegraphics{figures/mv_voronoi_xsection.png}
 	\end{center}
-	\caption{McDonald Valley depth to water.}
-	\label{fig:mvdtw}
+	\caption{McDonald Valley topography and head.}
+	\label{fig:mvxsection}
 \end{figure}
 
+\lipsum[2-4]
 
 \section{Discussion and Conclusions}
 FloPy is a popular python package for building, running, and post processing groundwater models.  It is open source and developed with input from a growing community of modelers.  
@@ -234,6 +231,5 @@ The datasets [h]GENERATED/ANALYZED] for this study can be found in the [NAME OF 
 
 \bibliographystyle{apalike} 
 \bibliography{flopy}
-
 
 \end{document}
