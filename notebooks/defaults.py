@@ -6,9 +6,22 @@ import shapely
 levels = np.arange(10, 110, 10)
 contour_color = "black"
 contour_style = "--"
-contour_dict = {"levels": levels, "linewidths": 0.5, "colors": contour_color, "linestyles": contour_style}
-mv_contour_dict = {"linewidths": 0.5, "colors": contour_color, "linestyles": contour_style}
-contour_label_dict = {"linewidth": 0.5, "color": contour_color, "linestyle": contour_style}
+contour_dict = {
+    "levels": levels,
+    "linewidths": 0.5,
+    "colors": contour_color,
+    "linestyles": contour_style,
+}
+mv_contour_dict = {
+    "linewidths": 0.5,
+    "colors": contour_color,
+    "linestyles": contour_style,
+}
+contour_label_dict = {
+    "linewidth": 0.5,
+    "color": contour_color,
+    "linestyle": contour_style,
+}
 clabel_dict = {
     "inline": True,
     "fmt": "%1.0f",
@@ -17,7 +30,13 @@ clabel_dict = {
 }
 font_dict = {"fontsize": 5, "color": "black"}
 grid_dict = {"lw": 0.25, "color": "0.5"}
-arrowprops = dict(arrowstyle="-", edgecolor='red', lw=0.5, shrinkA=0.15, shrinkB=0.15,)
+arrowprops = dict(
+    arrowstyle="-",
+    edgecolor="red",
+    lw=0.5,
+    shrinkA=0.15,
+    shrinkB=0.15,
+)
 river_dict = {"color": "blue", "linestyle": "-", "linewidth": 1}
 
 layer_cmap = colors.ListedColormap(["white", "green", "blue"])
@@ -165,6 +184,7 @@ streamseg4 = """1.371118012422360480e+05 4.472049689440994553e+04
 8.586956521739131131e+04 7.552795031055902655e+04
 8.369565217391305487e+04 7.962732919254660374e+04"""
 
+
 def string2geom(geostring):
     res = []
     for line in geostring.split("\n"):
@@ -173,6 +193,7 @@ def string2geom(geostring):
         y = float(line[1])
         res.append((x, y))
     return res
+
 
 def densify_geometry(line, step):
     line_geometry = shapely.geometry.LineString(line)
@@ -185,6 +206,7 @@ def densify_geometry(line, step):
         xp, yp = point.x, point.y  # extract the coordinates
         xy.append((xp, yp))  # and store them in xy list
     return xy
+
 
 def circle_function(center=(0, 0), radius=1.0, dtheta=10.0):
     angles = np.arange(0.0, 360.0, dtheta) * np.pi / 180.0
