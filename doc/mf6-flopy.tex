@@ -51,8 +51,6 @@
 
 \begin{abstract}
 
-%%% Leave the Abstract empty if your article does not require one, please see the Summary Table for full details.
-\section{}
 For full guidelines regarding your manuscript please refer to \href{http://www.frontiersin.org/about/AuthorGuidelines}{Author Guidelines}.
 
 As a primary goal, the abstract should render the general significance and conceptual advance of the work clearly accessible to a broad readership. References should not be cited in the abstract. Leave the Abstract empty if your article does not require one, please see \href{http://www.frontiersin.org/about/AuthorGuidelines#SummaryTable}{Summary Table} for details according to article type. 
@@ -61,14 +59,12 @@ As a primary goal, the abstract should render the general significance and conce
 \end{abstract}
 
 \section{Introduction}
-%For Original Research Articles \citep{conference}, Clinical Trial Articles \citep{article}, and Technology Reports \citep{patent}, the introduction should be succinct, with no subheadings \citep{book}. For Case Reports the Introduction should include symptoms at presentation \citep{chapter}, physical exams and lab results \citep{dataset}.
-
 
 FloPy is a popular Python package for constructing, running, and post processing MODFLOW-based groundwater models.  It is open source and developed with input from a growing community of modelers.  
 
 It has been recommended as one way to facilitate repeatable research and sharing of ideas \citep{fienen2016}
 
-We have FloPy to be particularly useful for teaching.  Annotated Jupyter notebooks, comparison with analytical solutions, ...
+We have found FloPy to be particularly useful for teaching.  Annotated Jupyter notebooks, comparison with analytical solutions, ...
 
 We rely on FloPy for MODFLOW development.  We write tests that rely on FloPy to construct and run models, and then read output.  We then verify that the output is as expected, by using the results from an analytical solution, results from another model, or results that have been confirmed to be correct.
 
@@ -109,11 +105,14 @@ Development and testing of the MODFLOW 6 program relies heavily on tight integra
 
 \subsection{Generating Grids}
 
-Support for a variety of different structured and unstructured grid types has been a recent focus of MODFLOW development \citep{modflowusg, modflow6gwf, modflow6xt3d}.  FloPy has been updated to support processing of different types of grids, such as those shown in figure \ref{fig:grids} through implementation of several different grid classes.  The regular MODFLOW grid consisting of layers, rows, and columns, continues to be a popular type of MODFLOW grid.  Regular MODFLOW grids can have constant row and column spacings, as shown in Figure \ref{fig:grids}A, or they can have variable row and column spacings to focus resolution around an area of interest, as shown in Figure \ref{fig:grids}B.  FloPy internally represents this type of grid as a StructuredGrid object.  
+Support for a variety of different structured and unstructured grid types has been a recent focus of MODFLOW development \citep{modflowusg, modflow6gwf, modflow6xt3d}.  FloPy has been updated to support processing of different types of grids, such as those shown in figure \ref{fig:grids} through implementation of several different grid classes.  The regular MODFLOW grid consisting of layers, rows, and columns, continues to be a popular type of MODFLOW grid.  Regular MODFLOW grids can have constant row and column spacings, as shown in Figure \ref{fig:grids}A, or they can have variable row and column spacings to focus resolution around an area of interest, as shown in Figure \ref{fig:grids}B.  FloPy internally represents this type of grid as a \texttt{StructuredGrid} object.  
 
 Nested grid \citep{modflowlgr2}
+
 quadtree grid refinement \citep{gridgen}; 
+
 then cite triangle \citep{trianglemesh} and 
+
 then cite voronoi grid \citep{2020SciPy-NMeth} cite any groundwater papers? algomesh?).
 
 FloPy gridding allows for innovation; mention Central Sands and the ability to simulate local-scale detail and regional-scale influence in the same simulation?
@@ -126,6 +125,8 @@ FloPy gridding allows for innovation; mention Central Sands and the ability to s
 \end{figure}
 
 \subsection{Geospatial Processing}
+
+Geospatial processing functionality has been added to FloPy to allow users to easily evaluate different grid resolutions or grid types. Raster resampling is available for \texttt{StructuredGrid} and \texttt{VertexGrid} objects. Examples of   
 
 Intersections, raster resampling, ...
 
