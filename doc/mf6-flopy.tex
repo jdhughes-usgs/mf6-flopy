@@ -16,6 +16,7 @@
 \usepackage{authblk}
 \usepackage{hyperref}
 \usepackage{xcolor}
+\usepackage{pythonhighlight}
 
 \usepackage{natbib}
 
@@ -27,7 +28,6 @@
     citecolor={blue!50!black},
     urlcolor={blue!80!black}
 }
-
 
 \author{Joseph D. Hughes}
 \affil{U.S. Geological Survey, Model Support and Maintence Branch, 927 W Belle Plaine Ave, Chicago, IL, USA}
@@ -42,6 +42,7 @@
 
 
 \begin{document}
+
 \onecolumn
 
 \title{Modern and Reproducible Groundwater Modeling Workflows with FloPy} 
@@ -105,9 +106,9 @@ Development and testing of the MODFLOW 6 program relies heavily on tight integra
 
 \subsection{Generating Grids}
 
-Support for a variety of different structured and unstructured grid types has been a recent focus of MODFLOW development \citep{modflowusg, modflow6gwf, modflow6xt3d}.  FloPy has been updated to support processing of different types of grids, such as those shown in figure \ref{fig:grids} through implementation of several different grid classes.  The regular MODFLOW grid consisting of layers, rows, and columns, continues to be a popular type of MODFLOW grid.  Regular MODFLOW grids can have constant row and column spacings, as shown in Figure \ref{fig:grids}A, or they can have variable row and column spacings to focus resolution around an area of interest, as shown in Figure \ref{fig:grids}B.  FloPy internally represents this type of grid as a \texttt{StructuredGrid} object.  
+Support for a variety of different structured and unstructured grid types has been a recent focus of MODFLOW development \citep{modflowusg, modflow6gwf, modflow6xt3d}.  FloPy has been updated to support processing of different types of grids, such as those shown in figure \ref{fig:grids} through implementation of several different grid classes.  The regular MODFLOW grid consisting of layers, rows, and columns, continues to be a popular type of MODFLOW grid.  Regular MODFLOW grids can have constant row and column spacings, as shown in Figure \ref{fig:grids}A, or they can have variable row and column spacings to focus resolution around an area of interest, as shown in Figure \ref{fig:grids}B.  FloPy internally represents this type of grid as a \texttt{StructuredGrid} object, which is automatically created from discretization data required when instantiating a MODFLOW 6 \texttt{DIS} object using \texttt{flopy.mf6.ModflowGwfdis()}.  
 
-Nested grid \citep{modflowlgr2}
+MODFLOW 6 was developed to natively support multi-model simulations \citep{modflow6framework}. One form of multi-model simulation is the used of nested grids that allow for local grid refinement in areas of interest \citep{modflowlgr, vilhelmsen2012evaluation, modflowlgr2}. Nested grids can be created using two or more overlapping \texttt{StructuredGrid} objects and combining flow or transport models created using this grid type in a single MODFLOW simulation object.
 
 quadtree grid refinement \citep{gridgen}; 
 
@@ -123,6 +124,8 @@ FloPy gridding allows for innovation; mention Central Sands and the ability to s
 	\end{center}
 	\caption{Examples of grids that can be generated and processed using FloPy for a hypothetical watershed, including (A) a regular structured MODFLOW grid, (B) a structured MODFLOW grid with irregular spacing, (C) a regular MODFLOW child grid nested within a regular MODFLOW parent grid, (D) a quadtree grid, (D) a triangular grid, and (E) a voronoi grid}\label{fig:grids}
 \end{figure}
+
+Talk about useful methods available on the grid objects...
 
 \subsection{Geospatial Processing}
 
@@ -230,7 +233,7 @@ This is a short text to acknowledge the contributions of specific colleagues, in
 The datasets [h]GENERATED/ANALYZED] for this study can be found in the [NAME OF REPOSITORY] [LINK].
 % Please see the availability of data guidelines for more information, at https://www.frontiersin.org/about/author-guidelines#AvailabilityofData
 
-\bibliographystyle{apalike} 
+\bibliographystyle{groundwater}
 \bibliography{flopy}
 
 \end{document}
