@@ -170,6 +170,8 @@ ENTRY
     series
     title
     type
+    urldate
+    url
     volume
     year
   }
@@ -532,24 +534,24 @@ FUNCTION {format.editors}
   if$
 }
 
-FUNCTION {format.title}
-{ title empty$
-    { "" }
-    { title "t" change.case$ }
-  if$
-}
+%FUNCTION {format.title}
+%{ title empty$
+%    { "" }
+%    { title "t" change.case$ }
+%  if$
+%}
 
 % Note that the APA style requres case changes
 % in article titles. The following does not
 % change cases. If you perfer it, uncomment the
 % following and comment out the above.
 
-%FUNCTION {format.title}
-%{ title empty$
-%    { "" }
-%    { title }
-%  if$
-%}
+FUNCTION {format.title}
+{ title empty$
+    { "" }
+    { title }
+  if$
+}
 
 FUNCTION {format.doi}
 { doi empty$
@@ -1022,6 +1024,23 @@ FUNCTION {output.bibitem}
   before.all 'output.state :=
 }
 
+FUNCTION {format.url}
+{ url empty$
+    { "" }
+    {
+      urldate empty$
+      {
+        "\url{" url * "}" *
+      }
+      {
+        "\url{" url * "} (accessed " * urldate * ")" *
+      }
+      if$
+    }
+  if$
+}
+
+
 FUNCTION {article}
 { output.bibitem
   format.authors
@@ -1335,6 +1354,23 @@ FUNCTION {unpublished}
   note "note" output.check
   fin.entry
 }
+
+FUNCTION {webpage}
+{ output.bibitem
+  format.authors
+  "author" output.check
+  author format.key output          % added
+  output.year.check                 % added
+  new.block
+  format.title
+  "title" output.check
+  new.block
+  format.url output
+  %format.urldate output
+
+  fin.entry
+}
+
 
 FUNCTION {default.type} { misc }
 
