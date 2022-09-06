@@ -17,6 +17,11 @@ mv_contour_dict = {
     "colors": contour_color,
     "linestyles": contour_style,
 }
+mv_contour_dict = {
+    "linewidths": 0.5,
+    "colors": contour_color,
+    "linestyles": contour_style,
+}
 contour_label_dict = {
     "linewidth": 0.5,
     "color": contour_color,
@@ -42,6 +47,7 @@ river_dict = {"color": "blue", "linestyle": "-", "linewidth": 1}
 layer_cmap = colors.ListedColormap(["white", "green", "blue"])
 drain_cmap = colors.ListedColormap(["red", "cyan"])
 lake_cmap = colors.ListedColormap(["cyan"])
+clay_cmap = colors.ListedColormap(["brown"])
 
 intersection_cmap = "Pastel2"
 temp_cmap = mpl.cm.get_cmap(intersection_cmap)
@@ -185,26 +191,42 @@ streamseg4 = """1.371118012422360480e+05 4.472049689440994553e+04
 8.369565217391305487e+04 7.962732919254660374e+04"""
 
 
-def string2geom(geostring):
+def string2geom(geostring, conversion=None):
+    if conversion is None:
+        multiplier = 1.0
+    else:
+        multiplier = float(conversion)
     res = []
     for line in geostring.split("\n"):
         line = line.split(" ")
-        x = float(line[0])
-        y = float(line[1])
+        x = float(line[0]) * multiplier
+        y = float(line[1]) * multiplier
         res.append((x, y))
     return res
 
 
-def densify_geometry(line, step):
-    line_geometry = shapely.geometry.LineString(line)
-    length_m = line_geometry.length  # get the length
-    xy = []  # to store new tuples of coordinates
-    for distance_along_old_line in np.arange(0, int(length_m + step), step):
-        point = line_geometry.interpolate(
-            distance_along_old_line
-        )  # interpolate a point every step along the old line
-        xp, yp = point.x, point.y  # extract the coordinates
-        xy.append((xp, yp))  # and store them in xy list
+def densify_geometry(line, step, keep_internal_nodes=True):
+    xy = []  # list of tuple of coordinates
+    lines_strings = []
+    if keep_internal_nodes:
+        for idx in range(1, len(line)):
+            lines_strings.append(shapely.geometry.LineString(line[idx-1:idx+1]))
+    else:
+        lines_strings = [shapely.geometry.LineString(line)]
+    
+    for line_string in lines_strings:
+        length_m = line_string.length # get the length
+        for distance in np.arange(0, length_m + step, step):
+            point = line_string.interpolate(distance)
+            xy_tuple = (point.x, point.y)
+            if xy_tuple not in xy:
+                xy.append(xy_tuple)
+        # make sure the end point is in xy
+        if keep_internal_nodes:
+            xy_tuple = line_string.coords[-1]
+            if xy_tuple not in xy:
+                xy.append(xy_tuple)
+                   
     return xy
 
 
