@@ -162,18 +162,22 @@ Development and testing of the MODFLOW 6 program relies heavily on tight integra
 
 \section{Common Modeling Tasks}
 
-\subsection{Generating Grids}
+\subsection{Managing and Creating Model Grids}
 
-Spatial discretization of a model domain into a model grid is a fundamental step in constructing a groundwater model.  FloPy continues to support regular MODFLOW grids, which are defined by layers, rows, and columns.  Regular MODFLOW grids can have constant row and column spacings, as shown in Figure \ref{fig:grids}A, or they can have variable row and column spacings to focus resolution around an area of interest, as shown in Figure \ref{fig:grids}B.  FloPy internally represents this type of grid as a \texttt{StructuredGrid} object, which is automatically created from discretization data required when instantiating a MODFLOW 6 \texttt{DIS} object using \texttt{flopy.mf6.ModflowGwfdis()}.  
+FloPy was originally developed to support models that are based on a regular grid consisting of layers, rows, and columns.  With recent support for unstructured grids in MODFLOW  \citep{modflowusg, modflow6gwf} it became necessary to revise the underlying approach for managing spatial discretization information in FloPy.  The goal was to containerize grid information into a single location and use this information throughout FloPy modeling tasks for geospatial processing, plotting, and exporting.  Spatial discretization is now handled in FloPy through dedicated model grid classes.  There is a \texttt{Grid} class, which serves as the base class for the \texttt{StructuredGrid}, \texttt{VertexGrid}, and \texttt{UnstructuredGrid} classes.  Grid objects can be created by the user for preprocessing, and they will be automatically generated and attached to a FloPy model object.
+
+Regular MODFLOW grids can have constant row and column spacings, as shown in Figure \ref{fig:grids}A, or they can have variable row and column spacings to focus resolution around an area of interest, as shown in Figure \ref{fig:grids}B.  The following Python code shows how to create a \texttt{StructuredGrid} object in FloPy.  A \texttt{StructuredGrid} object will also be created from discretization data required when instantiating a MODFLOW 6 \texttt{DIS} object using \texttt{flopy.mf6.ModflowGwfdis()}.  
 
 \begin{python}
->>> regular_grid = StructuredGrid(nlay=nlay, delr=delr, delc=delc,  
-... xoff=0.0, yoff=0.0, top=top, botm=botm)
+>>> regular_grid = flopy.discretization.StructuredGrid(nlay=nlay, 
+... delr=delr, delc=delc, xoff=0.0, yoff=0.0, top=top, botm=botm)
 \end{python}
 
-MODFLOW 6 was developed to natively support multi-model simulations \citep{modflow6framework}. One form of multi-model simulation is a nested grid application in which a more finely discretized child model is embedded within a more coarsely discretized parent model \citep{modflowlgr, vilhelmsen2012evaluation, modflowlgr2}.  The use of a locally refined grid (LGR) within a parent grid offers computation benefits in that the additional refinement is targeted to an area of interest.  FloPy provides a utility class, called \texttt{flopy.utils.lgrutil.Lgr()} for constructing the data required to tightly couple parent and child models within a single MODFLOW 6 simulation.   Figure \ref{fig:grids}C shows a nested child model within a parent model.  The \texttt{flopy.utils.lgrutil.Lgr()} defines the connection properties between cells in the parent model and cells in the child model.  The utility is general in that the child model can have more layers than the parent model.
+MODFLOW 6 was developed to natively support multi-model simulations \citep{modflow6framework}. One form of multi-model simulation is a nested grid application in which a more finely discretized child model is embedded within a more coarsely discretized parent model \citep{modflowlgr, vilhelmsen2012evaluation, modflowlgr2}.  The use of a locally refined grid (LGR) within a parent grid offers computation benefits in that the additional refinement is targeted to an area of interest.  FloPy provides a utility class, called \texttt{flopy.utils.lgrutil.Lgr()} for constructing the data required to tightly couple parent and child models within a single MODFLOW 6 simulation.   Figure \ref{fig:grids}C shows two \texttt{StructuredGrid} objects---one object represents the parent model grid and the other represents the nested child grid.  The \texttt{flopy.utils.lgrutil.Lgr()} defines the connection properties between cells in the parent model and cells in the child model.  The utility is general in that the child model can have more layers than the parent model.
 
-Support for unstructured grid types has been a recent focus of MODFLOW development \citep{modflowusg, modflow6gwf, modflow6xt3d}.  FloPy supports generation of several types of unstructured grids, including layered quadtree grids.  A layered quadtree grid can be created with FloPy using the \texttt{flopy.utils.gridgen.Gridgen()} utility class, which is a wrapper around the GRIDGEN program \citep{gridgen}.  GRIDGEN works by starting with a regular MODFLOW grid and recursively subdividing individual cells into quarters until a maximum level of refinement is met.  Smoothing is automatically handled so that a cell is connected to no more than two cells in any horizontal direction and four cells in the vertical direction.   Figure \ref{fig:grids}D shows an example of a quadtree grid created with GRIDGEN in which a base grid is refined along streams.
+FloPy supports management and generation of unstructured grids.  Unstructured grids are represented in FloPy as being layered or fully unstructured.  A layered grid is one in which the same grid applies to all model layers.  An unstructured grid is more general and allows the model grid to change with depth.  Layered grids and unstructured grids are stored in FloPy as \texttt{VertexGrid} and \texttt{UnstructuredGrid} objects, respectively.
+
+A layered quadtree grid can be created with FloPy using the \texttt{flopy.utils.gridgen.Gridgen()} utility class, which is a wrapper around the GRIDGEN program \citep{gridgen}.  GRIDGEN starts with a regular MODFLOW grid provided by the user.  The program then recursively subdivides individual cells that intersect with refinement features into quarters until a maximum level of refinement is met.  Refinement features may be points, lines, or polygons.  Smoothing is automatically handled so that a cell is connected to no more than two cells in any primary horizontal direction and four cells in the vertical direction.   Figure \ref{fig:grids}D shows an example of a quadtree grid created with GRIDGEN in which a base grid is refined along streams.  The following Python code shows the steps for creating the quadtree grid with GRIDGEN.
 
 \begin{python}
 >>> sim = flopy.mf6.MFSimulation()
@@ -187,11 +191,11 @@ Support for unstructured grid types has been a recent focus of MODFLOW developme
 >>> quadtree_grid = flopy.discretization.VertexGrid(**gridprops_vg)
 \end{python}
 
-FloPy also provides a wrapper utility for the Triangle \citep{trianglemesh} program.  The FloPy wrapper utility (\texttt{flopy.utils.triangle.Triangle()}) writes the Triangle program input file, runs the Triangle program, and then loads the triangular mesh.  Users provide the maximum area for individual triangles, angle constraints, a polygon describing the model domain, and so forth.  Figure \ref{fig:grids}E shows an example of a triangular grid created with the Triangle program.
+FloPy also provides a wrapper utility for the Triangle \citep{trianglemesh} program.  The FloPy wrapper utility (\texttt{flopy.utils.triangle.Triangle()}) writes the Triangle program input file, runs the Triangle program, and then loads the triangular mesh.  Users provide the maximum area for individual triangles, angle constraints, a polygon describing the model domain, and so forth.  Figure \ref{fig:grids}E shows an example of a triangular grid created with the Triangle program.  The Python code for creating the triangular grid is shown below.
 
 \begin{python}
->>> tri = Triangle(maximum_area=maximum_area, angle=30, nodes=nodes, 
-... model_ws=temp_path)
+>>> tri = flopy.utils.triangle.Triangle(maximum_area=maximum_area,  
+... angle=30, nodes=nodes, model_ws=temp_path)
 ...
 >>> tri.add_polygon(boundary_points)
 >>> tri.build(verbose=False)
@@ -202,10 +206,10 @@ FloPy also provides a wrapper utility for the Triangle \citep{trianglemesh} prog
 ...
 \end{python}
 
-A triangular grid can be converted into a Voronoi grid within FloPy using the \texttt{flopy.utils.voronoi.VoronoiGrid()} utility class.  This utility class uses SciPy methods  \citep{2020SciPy-NMeth} to construct Voronoi polygons around each vertex in the triangular mesh.  Figure \ref{fig:grids}F shows an example of a Voronoi grid created created from the triangular mesh shown in D.
+A triangular grid can be converted into a Voronoi grid within FloPy using the \texttt{flopy.utils.voronoi.VoronoiGrid()} utility class.  This utility class uses SciPy routines  \citep{2020SciPy-NMeth} to construct Voronoi polygons around each vertex in the triangular mesh.  Figure \ref{fig:grids}F shows an example of a Voronoi grid created from the triangular mesh shown in Figure \ref{fig:grids}D.  The steps for creating the voronoi grid from the Triangle object are shown below.
 
 \begin{python}
->>> vor = VoronoiGrid(tri)
+>>> vor = flopy.utils.voronoi.VoronoiGrid(tri)
 >>> gridprops = vor.get_gridprops_vertexgrid()
 >>> voronoi_grid = VertexGrid(**gridprops, nlay=nlay, idomain=idomain)
 \end{python}
