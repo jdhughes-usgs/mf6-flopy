@@ -227,9 +227,9 @@ Talk about useful methods available on the grid objects...
 
 \subsection{Geospatial Processing}
 
-Geospatial processing functionality has been added to FloPy to allow users to easily evaluate different grid resolutions or grid types. Raster resampling is available for \texttt{StructuredGrid} and \texttt{VertexGrid} objects. Examples of   
+Geospatial processing is often a fundamental part of creating a groundwater model.  New geospatial processing functionality has been added to FloPy to help users construct models using data from common input sources.  The geospatial processing functionality has been implemented to work with the different types of model grids so that it is straightforward to build and construct models with different grid resolutions or grid types. The geospatial processing routines work with all three of the model grid types (\texttt{StructuredGrid}, \texttt{VertexGrid}, and \texttt{UnstructuredGrid}).  
 
-Raster resampling, ...
+A common geospatial processing task is resampling of raster data onto a model grid.  For example, it is often necessary as part of model construction to resample a raster data set of land surface elevation onto a model grid.  FloPy includes a new raster sampling utility based on the Rasterio Python package \citep{gillies_2019}.  The following Python code demonstrates the steps for resampling an Esri ASCII raster format grid onto a Voronoi grid.
 
 \begin{python}
 >>> fine_topo = flopy.utils.Raster.load("./grid_data/fine_topo.asc")
@@ -238,10 +238,13 @@ Raster resampling, ...
 ...
 \end{python}
 
-%\lipsum[103]
+\noindent The result of raster resampling is a numpy array, equal in size to the number of cells in the Voronoi grid, with an interpolated land surface elevation for each model cell.  In this Python code example, the land surface grid was interpolated to the Voronoi grid using a ``linear'' method, however, the method also supports other options (nearest, cubic, mean, median, min, and max) for resampling.  The color floods of elevation in Figure \ref{fig:grids} show the results of linear raster resampling for land surface onto a variety of structured and unstructured model grids.
 
-Intersections ...
+Performing intersections of hydrologic features with the model grid is another common modeling task.  FloPy is now equipped with robust and efficient capabilities for intersecting a model grid with points, lines, and polygons.  The underlying intersection routines rely on the Shapely Python package \citep{shapely-gillies} to determine intersection properties.  When a point or collection of points is intersected with a model grid, the grid intersection routine returns the cells that intersect with the points.  When a line or collection of lines is intersected with a model grid, the grid intersection routine returns the cells that intersect with the lines and the lengths of lines within the cell.  The line and grid intersection routine also creates and returns individual line segments of the line features within each intersected cell.  When a polygon or collection of polygons is intersected with a model grid, the grid intersection routine returns the cells that intersect with the polygons and the polygon area within the cell.  The polygon and grid intersection routine also creates and returns individual polygons of the original polygon features within the intersected cells.
 
+The following Python code demonstrates the steps for identifying the grid cells that intersect with a collection of line segments.
+
+% something seems funky with this code example.  The grid intersect routine should be able to do this all in one step.
 \begin{python}
 >>> ixs = flopy.utils.GridIntersect(voronoi_grid, method="vertex")
 >>> cellids = []
@@ -251,19 +254,15 @@ Intersections ...
 ...
 \end{python}
 
-%\lipsum[103-105]
-
+\noindent The result of this code snippet is a list of Voronoi grid cell numbers (called ``cellids'') that intersect with the model grid.   Examples of the grid intersection capabilities for six different model grids with a linear stream network is shown in Figure \ref{fig:intersections}.
 
 \begin{figure}[ht!]
 	\begin{center}
 		\includegraphics{figures/grids_intersection.png}
 	\end{center}
-	\caption{Examples of the intersection of a linear stream network and MODFLOW grids shown in figure~\ref{fig:grids} using FloPy, including (A) a regular structured MODFLOW grid, (B) a structured MODFLOW grid with irregular spacing, (C) a regular MODFLOW child grid nested within a regular MODFLOW parent grid, (D) a quadtree grid, (D) a triangular grid, and (E) a voronoi grid. The shaded cells represent cells that intersect the river network. The plots are centered on the location of the child grid shown in figure~\ref{fig:grids}C.}
+	\caption{Examples of the intersection of a linear stream network with the model grids shown in Figure~\ref{fig:grids}.  Intersections were performed using FloPy for (A) a regular MODFLOW grid, (B) a regular MODFLOW grid with variable row and column spacing, (C) a regular MODFLOW child grid nested within a regular MODFLOW parent grid, (D) a quadtree grid, (D) a triangular grid, and (E) a Voronoi grid.  Shaded cells represent those cells that intersect with the linear stream network.  Individual plots in this figure are centered on the location of the child grid shown in Figure~\ref{fig:grids}C.}
 	\label{fig:intersections}
 \end{figure}
-
-%\lipsum[106-108]
-
 
 \subsection{Processing MODFLOW 6 output}
 
@@ -422,6 +421,8 @@ FloPy is a popular Python package for building, running, and post processing gro
 \end{itemize}
 
 FloPy makes it possible to construct, and reproduce the construction, of a groundwater model from native data in any format that can be accessed using Python.  The robust new features in FloPy allow users to quickly try different model grids, different model spatial and temporal resolution, and different model configurations.  
+
+It is often useful to write a Python script to construct a groundwater model from start to finish.  The new geospatial processing routines make it possible to change model resolution as part of the model construction script.  This allows one to prototype fast running models with coarse resolution and use finer resolution as the model starts to behave as intended.  This workflow also allows one to conduct grid convergence studies to ensure that the grid is not the cause of unintended model behavior.
 
 \section*{Acknowledgments}
 This is a short text to acknowledge the contributions of specific colleagues, institutions, or agencies that aided the efforts of the authors.
