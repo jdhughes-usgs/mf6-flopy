@@ -254,7 +254,7 @@ The following Python code demonstrates the steps for identifying the grid cells 
 ...
 \end{python}
 
-\noindent The result of this code snippet is a list of Voronoi grid cell numbers (called ``cellids'') that intersect with the model grid.   Examples of the grid intersection capabilities for six different model grids with a linear stream network is shown in Figure \ref{fig:intersections}.
+\noindent The result of this code snippet is a list of Voronoi grid cell numbers (called ``cellids'') that intersect with the model grid.   Results of the grid intersection for a linear stream network and the six different model grids is shown in Figure \ref{fig:intersections}.
 
 \begin{figure}[ht!]
 	\begin{center}
@@ -266,19 +266,23 @@ The following Python code demonstrates the steps for identifying the grid cells 
 
 \subsection{Processing MODFLOW 6 output}
 
-Available output methods 
+MODFLOW 6 has many different types of output that can be created during a simulation.  A GWF Model, for example, can write simulated heads and detailed budget information to binary files.  Global model budgets can be written to comma-separated value text files.  Some individual GWF Model packages can also write simulated output during a simulation.  For example, the Lake Package can write simulated lake stages and detailed lake budget information to binary files.  Likewise, the Multi-Aquifer Well (MAW) Package can write simulated well head and well budgets to binary files.  Recent improvements have been made to FloPy to allows users easier access to simulation results using \texttt{.output} routines.  Prior to these improvements, users were required to instantiate head and budget file readers using file paths and names in order to access this information.  With the \texttt{.output} routines, the readers are automatically generated when called by the user.
 
+The following \texttt{.methods()} syntax shows how a user can discover the type of output information that is available for the specified \texttt{gwf} model.
 
+% not sure where there is a list() object here.
 \begin{python}
 >>> gwf.output.methods()
 ['list()', 'zonebudget()', 'budget()', 'budgetcsv()', 'head()']
 \end{python}
 
-Processing head output 
+\noindent To access the simulated head output, for example, a call can be made to the head reader to retrieve data for a specified simulation time using the \texttt{.get\_data()} method as follows.
 
 \begin{python}
 >>> head = gwf.output.head().get_data(totim=1.0)
 \end{python}
+
+\noindent In this case the \texttt{head} variable is a numpy array equal in size to the size of the model grid.  
 
 Processing cell-by-cell output 
 
