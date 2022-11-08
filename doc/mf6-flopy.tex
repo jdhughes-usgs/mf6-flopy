@@ -191,7 +191,7 @@ A layered quadtree grid can be created with FloPy using the \texttt{flopy.utils.
 >>> quadtree_grid = flopy.discretization.VertexGrid(**gridprops_vg)
 \end{python}
 
-FloPy also provides a wrapper utility for the Triangle \citep{trianglemesh} program.  The FloPy wrapper utility (\texttt{flopy.utils.triangle.Triangle()}) writes the Triangle program input file, runs the Triangle program, and then loads the triangular mesh.  Users provide the maximum area for individual triangles, angle constraints, a polygon describing the model domain, and so forth.  Figure \ref{fig:grids}E shows an example of a triangular grid created with the Triangle program.  The Python code for creating the triangular grid is shown below.
+FloPy also provides a wrapper utility for the Triangle mesh generation program \citep{trianglemesh}.  The FloPy wrapper utility (\texttt{flopy.utils.triangle.Triangle()}) writes the Triangle program input file, runs the Triangle program, and then loads the triangular mesh.  Users provide the maximum area for individual triangles, angle constraints, a polygon describing the model domain, and so forth.  Figure \ref{fig:grids}E shows an example of a triangular grid created with the Triangle program.  The Python code for creating the triangular grid is shown below.
 
 \begin{python}
 >>> tri = flopy.utils.triangle.Triangle(maximum_area=maximum_area,  
@@ -214,8 +214,6 @@ A triangular grid can be converted into a Voronoi grid within FloPy using the \t
 >>> voronoi_grid = VertexGrid(**gridprops, nlay=nlay, idomain=idomain)
 \end{python}
 
-FloPy gridding allows for innovation; mention Central Sands and the ability to simulate local-scale detail and regional-scale influence in the same simulation?
-
 \begin{figure}[ht!]
 	\begin{center}
 		\includegraphics{figures/grids_geoprocessing.png}
@@ -223,7 +221,9 @@ FloPy gridding allows for innovation; mention Central Sands and the ability to s
 	\caption{Examples of grids that can be generated and processed using FloPy for a hypothetical watershed, including (A) a regular MODFLOW grid with constant and equal row and column spacings, (B) a regular MODFLOW grid with variable row and column spacings, (C) a regular MODFLOW child grid nested within a regular MODFLOW parent grid, (D) a quadtree grid generated with the GRIDGEN program \citep{gridgen} through the FloPy wrapper, (D) a triangular grid generated with the Triangle program \citep{trianglemesh} through the FloPy wrapper, and (E) a Voronoi grid created from the triangular mesh.}\label{fig:grids}
 \end{figure}
 
-Talk about useful methods available on the grid objects...
+\texttt{StructuredGrid}, \texttt{VertexGrid}, and \texttt{UnstructuredGrid} grid objects have useful properties and methods for accessing or mapping locations on the model grid including: (1) conversion of xy pairs from local to global coordinates (\texttt{get\_coords()}) and from global to local coordinates (\texttt{get\_local\_coords()}); (2) getting x, y, and z coordinates for cell centers (\texttt{xcellcenters}, \texttt{ycellcenters}, \texttt{zcellcenters}, and \texttt{xyzcellcenters}) and vertices (\texttt{xvertices}, \texttt{yvertices}, \texttt{zvertices}, and \texttt{xyzvertices}); (3) intersecting a list of xy pairs with the grid and returning the appropriate \texttt{cellid} (\texttt{intersect()}). Other interesting grid object methods include generating a grid object from a MODFLOW 6 binary grid file (\texttt{from\_binary\_grid\_file()}), calculating the cell thickness for each cell (\texttt{thick}), and the saturated thickness for each cell (\texttt{saturated\_thick}).
+
+FloPy gridding allows for innovation; mention Central Sands and the ability to simulate local-scale detail and regional-scale influence in the same simulation?
 
 \subsection{Geospatial Processing}
 
@@ -276,19 +276,34 @@ The following \texttt{.methods()} syntax shows how a user can discover the type 
 ['list()', 'zonebudget()', 'budget()', 'budgetcsv()', 'head()']
 \end{python}
 
-\noindent To access the simulated head output, for example, a call can be made to the head reader to retrieve data for a specified simulation time using the \texttt{.get\_data()} method as follows.
+\subsubsection{Processing simulated heads}
+
+To access the simulated head output, for example, a call can be made to the head reader to retrieve data for a specified simulation time using the \texttt{.get\_data()} method as follows.
 
 \begin{python}
 >>> head = gwf.output.head().get_data(totim=1.0)
 \end{python}
 
-\noindent In this case the \texttt{head} variable is a numpy array equal in size to the size of the model grid.  
-
-Processing cell-by-cell output 
+\noindent In this case the \texttt{head} variable is a numpy array equal in size to the size of the model grid. Head data can also be accessed for a zero-based (kstp, kper) tuple  
 
 \begin{python}
->>> cbc = gwf.output.budget()
->>> cbc.list_unique_records()
+>>> head = gwf.output.head().get_data(kstpkper=(0,0))
+\end{python}
+
+\noindent or a zero-based index
+
+\begin{python}
+>>> head = gwf.output.head().get_data(idx=0)
+\end{python}
+
+\noindent in addition providing a user-specified simulation time (\texttt{totim=}). 
+
+\subsubsection{Processing simulated cell-by-cell budget results}
+
+Similar to head output cell-by-cell budget information can be accessed using FloPy. Unlike the simulated head file, the cell-by-cell budget file can have data for more than one item, which can be either arrays or lists of data. The data in the cell-by-cell budget file can be determined using
+
+\begin{python}
+>>> cbc = gwf.output.budget().list_unique_records()
 RECORD           IMETH
 ----------------------
 FLOW-JA-FACE         1
@@ -297,12 +312,20 @@ DRN                  6
 RCHA                 6
 \end{python}
 
-Specific discharge
+\noindent The \texttt{IMETH} defines if the data is an array (\texttt{IMETH=1}) or is list based (\texttt{IMETH=6}). Cell-by-cell specific-discharge data can be extracted using
 
 \begin{python}
->>> spdis = cbc.get_data(text="DATA-SPDIS")[0]
->>> qx, qy, qz = flopy.utils.postprocessing.get_specific_discharge(spdis, gwf)
+>>> spdis = gwf.output.budget().get_data(totim=1.0, text="DATA-SPDIS")[0]
 \end{python}
+
+\noindent Specific-discharge data is returned as a list containing a Numpy record array for the user-specified simulation time (\texttt{totim=}). All of the data in the cell-by-cell data file for a user-specified simulation time (\texttt{totim=}), zero-based (kstp, kper) tuple (\texttt{kstpkper=}), or zero-based index (\texttt{idx=}) can also be extracted. Specific-discharge data can be processed into a form that can be plotted with FloPy using 
+
+\begin{python}
+>>> qx, qy, qz = flopy.utils.postprocessing.get_specific_discharge(spdis, gwf, 
+... head=head)
+\end{python}
+
+\noindent The optional argument \texttt{head=} above sets the specific-discharge in inactive or dry cells to NaN. The \texttt{get\_specific\_discharge()} method also includes functionality to plot specific discharge values at the cell \texttt{"centers"} (default), \texttt{"faces"}, or \texttt{"vertices"}. 
 
 \subsection{Plotting}
 
@@ -366,9 +389,9 @@ shapefiles (all grids), VTK (all grids) and NetCDF (structured grids).  NetCDF f
 
 %\lipsum[2-4]
 
-\section{Example}
+\section{Scripting MODFLOW 6 Model Development Using Python and FloPy}
 
-Background of the McDonald Valley \citep{hill1998}
+\citep{hill1998} presented a synthetic test case (Synthetic Valley) of an undeveloped alluvial valley surrounded by low permeability bedrock. The model included Blue Lake and Straight River surface water features. The model presented in \cite{hill1998} was simulated using MODFLOWP \citep{hill1992computer} using a structured grid with a constant 152.4 meter grid spacing and five model layers. To demonstrate that capabilities of FloPy and MODFLOW 6 we discretized the 6,096 meter x 3,810 meter model domain using a \texttt{VertexGrid} and the discretization by vertices (DISV) package (Figure~\ref{fig:mvgrid}\textit{A}).
 
 %\lipsum[12-18]
 
@@ -429,14 +452,11 @@ FloPy makes it possible to construct, and reproduce the construction, of a groun
 It is often useful to write a Python script to construct a groundwater model from start to finish.  The new geospatial processing routines make it possible to change model resolution as part of the model construction script.  This allows one to prototype fast running models with coarse resolution and use finer resolution as the model starts to behave as intended.  This workflow also allows one to conduct grid convergence studies to ensure that the grid is not the cause of unintended model behavior.
 
 \section*{Acknowledgments}
-This is a short text to acknowledge the contributions of specific colleagues, institutions, or agencies that aided the efforts of the authors.
-
-\section*{Supplemental Data}
- \href{http://home.frontiersin.org/about/author-guidelines#SupplementaryMaterial}{Supplementary Material} should be uploaded separately on submission, if there are Supplementary Figures, please include the caption in the same file as the figure. LaTeX Supplementary Material templates can be found in the Frontiers LaTeX folder.
+The authors gratefully acknowledge the efforts of Mark Bakker and Vincent E.A. Post for initially developing FloPy and their continued efforts improving FloPy.  Funding for this research was provided by the Enterprise Capacity (EC) project of the U.S. Geological Survey Integrated Water Prediction program.
 
 \section*{Data Availability Statement}
-The datasets [h]GENERATED/ANALYZED] for this study can be found in the [NAME OF REPOSITORY] [LINK].
-% Please see the availability of data guidelines for more information, at https://www.frontiersin.org/about/author-guidelines#AvailabilityofData
+FloPy is an open source software product and we welcome bug reports, code contributions, or improvements to the documentation from the community. The FloPy python package can be installed using \texttt{conda} or \texttt{pip}. The source code, code documentation, tutorials, and examples can be found in the \href{https://github.com/modflowpy/flopy}{FloPy GitHub repository}. The Synthetic Valley example is available as a \href{https://modflow6-examples.readthedocs.io/en/master/examples.html}{MODFLOW 6 example} and the hypothetical watershed grid examples are available on the \href{https://github.com/modflowpy/flopy/tree/develop/examples/mf6_groundwater_paper}{FloPy GitHub repository}.
+
 
 \bibliographystyle{groundwater}
 \bibliography{flopy}
