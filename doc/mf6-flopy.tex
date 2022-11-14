@@ -147,6 +147,16 @@ Development and testing of the MODFLOW 6 program relies heavily on tight integra
 
 \section{Common Modeling Tasks}
 
+\subsection{Getting MODFLOW-based and Other Executables}
+
+FloPy for MODFLOW 6 relies on a number of helper classes, which wrap functionality available in pre-compiled external executables, to generate unstructured models and calculate water budgets on user-defined zones. To facilitate getting these executables and other MODFLOW and related programs (for example, MODPATH, MT3DMS, MT3D-USGS, SEAWAT, etc.) can be installed using
+
+\begin{lstlisting}[xleftmargin=0.5cm, basicstyle=\ttm, aboveskip=20pt, belowskip=20pt,]
+get-modflow :flopy
+\end{lstlisting}
+
+\noindent in a terminal or at the command line after installing FloPy. The \texttt{get-modflow} command downloads the latest release of MODFLOW and related programs for the operating system the command is run on (Windows, MacOS, or Linux) from a \href{https://github.com/MODFLOW-USGS/executables}{Executables GitHub repository}. \texttt{get-modflow} can also download previous versions of MODFLOW 6 and the latest development version of MODFLOW 6 using instructions available on the \href{https://github.com/modflowpy/flopy/blob/develop/docs/get_modflow.md}{FloPy GitHub repository}.
+
 \subsection{Managing and Creating Model Grids}
 
 FloPy was originally developed to support models that are based on a regular grid consisting of layers, rows, and columns. With recent support for unstructured grids in MODFLOW \citep{modflowusg, modflow6gwf} it became necessary to revise the underlying approach for managing spatial discretization information in FloPy. The goal was to containerize grid information into a single location and use this information throughout FloPy modeling tasks for geospatial processing, plotting, and exporting. Spatial discretization is now handled in FloPy through dedicated model grid classes. There is a \texttt{Grid} class, which serves as the base class for the \texttt{StructuredGrid}, \texttt{VertexGrid}, and \texttt{UnstructuredGrid} classes. Grid objects can be created by the user for preprocessing, and they will be automatically generated and attached to a FloPy model object.
@@ -155,7 +165,7 @@ Regular MODFLOW grids can have constant row and column spacings, as shown in Fig
 
 \begin{python}
 >>> regular_grid = flopy.discretization.StructuredGrid(nlay=nlay, 
-... delr=delr, delc=delc, xoff=0.0, yoff=0.0, top=top, botm=botm)
+... delr=delr, delc=delc, xoff=0.0, yoff=0.0, angrot=0.0, top=top, botm=botm)
 \end{python}
 
 
@@ -167,7 +177,7 @@ Regular MODFLOW grids can have constant row and column spacings, as shown in Fig
 \end{figure}
 
 
-MODFLOW 6 was developed to natively support multi-model simulations \citep{modflow6framework}. One form of multi-model simulation is a nested grid application in which a more finely discretized child model is embedded within a more coarsely discretized parent model \citep{modflowlgr, vilhelmsen2012evaluation, modflowlgr2}. The use of a locally refined grid (LGR) within a parent grid offers computation benefits in that the additional refinement is targeted to an area of interest. FloPy provides a utility class, called \texttt{Lgr()} for constructing the data required to tightly couple parent and child models within a single MODFLOW 6 simulation.  Figure \ref{fig:grids}C shows two \texttt{StructuredGrid} objects---one object represents the parent model grid and the other represents the nested child grid. The \texttt{Lgr()} defines the connection properties between cells in the parent model and cells in the child model. The utility is general in that the child model can have more layers than the parent model.
+MODFLOW 6 was developed to natively support multi-model simulations \citep{modflow6framework}. One form of multi-model simulation is a nested grid application in which a more finely discretized child model is embedded within a more coarsely discretized parent model \citep{modflowlgr, vilhelmsen2012evaluation, modflowlgr2}. The use of a locally refined grid (LGR) within a parent grid offers computation benefits in that the additional refinement is targeted to an area of interest. FloPy provides a utility class, called \texttt{Lgr()} for constructing the data required to tightly couple parent and child models within a single MODFLOW 6 simulation.  Figure \ref{fig:grids}C shows two \texttt{StructuredGrid} objects---one object represents the parent model grid and the other represents the nested child grid. The \texttt{Lgr()} class defines the connection properties between cells in the parent model and cells in the child model. The utility is general in that the child model can have more layers than the parent model.
 
 FloPy supports management and generation of unstructured grids. Unstructured grids are represented in FloPy as being layered or fully unstructured. A layered grid is one in which the same grid applies to all model layers. An unstructured grid is more general and allows the model grid to change with depth. Layered grids and unstructured grids are stored in FloPy as \texttt{VertexGrid} and \texttt{UnstructuredGrid} objects, respectively.
 
@@ -352,7 +362,8 @@ Normal Termination
 
 \subsection{Plotting}
 
-Processing output
+FloPy plotting functions presented in \cite{bakker2016scripting} have been updated to support plotting unstructured models in map and cross-section view using \texttt{.PlotMapView()} and \texttt{.PlotCrossSection()}, respectively. The plotting methods available with \texttt{.PlotMapView()} and \texttt{.PlotCrossSection()} are thin wrappers around matplotlib plotting methods and allow fine-grained control using matplotlib \texttt{kwargs}. 
+
 
 Maps
 
