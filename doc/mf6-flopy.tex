@@ -36,6 +36,21 @@
 
 \usepackage{listings}
 
+\newcommand\terminalstyle{\lstset{
+basicstyle=\ttm,
+frame=none,             % Any extra options here
+aboveskip=20pt,
+belowskip=20pt,
+xleftmargin=0.5cm,
+}}
+\lstnewenvironment{terminal}[1][]
+{
+\terminalstyle
+\lstset{#1}
+}
+{}
+
+
 % Python style for highlighting
 \newcommand\pythonstyle{\lstset{
 language=Python,
@@ -151,9 +166,9 @@ Development and testing of the MODFLOW 6 program relies heavily on tight integra
 
 FloPy for MODFLOW 6 relies on a number of helper classes, which wrap functionality available in pre-compiled external executables, to generate unstructured models and calculate water budgets on user-defined zones. To facilitate getting these executables and other MODFLOW and related programs (for example, MODPATH, MT3DMS, MT3D-USGS, SEAWAT, etc.) can be installed using
 
-\begin{lstlisting}[xleftmargin=0.5cm, basicstyle=\ttm, aboveskip=20pt, belowskip=20pt,]
+\begin{terminal}
 get-modflow :flopy
-\end{lstlisting}
+\end{terminal}
 
 \noindent in a terminal or at the command line after installing FloPy. The \texttt{get-modflow} command downloads the latest release of MODFLOW and related programs for the operating system the command is run on (Windows, MacOS, or Linux) from a \href{https://github.com/MODFLOW-USGS/executables}{Executables GitHub repository}. \texttt{get-modflow} can also download previous versions of MODFLOW 6 and the latest development version of MODFLOW 6 using instructions available on the \href{https://github.com/modflowpy/flopy/blob/develop/docs/get_modflow.md}{FloPy GitHub repository}.
 
@@ -360,23 +375,24 @@ Normal Termination
 
 \noindent \texttt{zarr} in the \texttt{gwf.lak.output.zonebudget()} is a numpy array that defines an integer zone for each lake in the LAK advanced stress package. Zone Budget output can be returned as a numpy record array (\texttt{.get\_budget()} or \texttt{get\_volumetric\_budget()}) or a panda dataframe (\texttt{get\_dataframes()}).
 
-\subsection{Plotting}
+\subsection{Plotting} \label{sec:plotting}
 
-FloPy plotting functions presented in \cite{bakker2016scripting} have been updated to support plotting both structured and unstructured models in map and cross-section view using \texttt{.PlotMapView()} and \texttt{.PlotCrossSection()}, respectively. The plotting methods available with \texttt{.PlotMapView()} and \texttt{.PlotCrossSection()} are thin wrappers around matplotlib plotting methods and allow fine-grained control using matplotlib keyword arguments (\texttt{kwargs}). 
-
-
-Maps
+FloPy plotting functions presented in \cite{bakker2016scripting} have been updated to support plotting both structured and unstructured models in map and cross-section view using the \texttt{.PlotMapView()} and \texttt{.PlotCrossSection()} classes, respectively. The plotting methods are thin wrappers around matplotlib plotting methods and allow fine-grained control using matplotlib keyword arguments (\texttt{kwargs}). The following Python code demonstrates the steps for plotting a map of simulated heads, the model grid, the location of drain (DRN) package cells, specific-discharge vectors, and head contours for the \texttt{gwf} model.
 
 \begin{python}
 >>> mm = flopy.plot.PlotMapView(model=gwf)
->>> cb = mm.plot_array(head, edgecolor="0.5")
->>> mm.plot_bc("CHD")
+>>> mm.plot_array(head, edgecolor="0.5")
+>>> mm.plot_bc("DRN")
+>>> mm.plot_grid()
+>>> cs = mm.contour_array(head)
+>>> mm.ax.clabel(cs)
 >>> mm.plot_vector(qx, qy, normalize=True)
->>> plt.colorbar(cb, orientation="horizontal");
 >>> plt.show()
 \end{python}
 
-Cross-sections 
+\noindent Figure~\ref{fig:flopyplots}\textit{A} shows the outcome of the python code demonstrated above with additional geographic features and fine-grained control of grid lines, text, annotations, tick locations, and axis labels. Results shown in Figure~\ref{fig:flopyplots} are for a steady-state model discretized into convertible three layers, isotropic hydraulic properties, a hydraulic conductivity of 1 m/d, rivers represented a drain cells, and drains located on the top of the model in layer 1 to prevent groundwater levels from exceeding the top of the model, and an areal recharge rate of 0.000001 m/d. Figure~\ref{fig:flopyplots}\textit{B} shows used of the \texttt{.plot\_array()} method to show a map of the layer containing the water table, drain cells where the groundwater is discharging to a river, and cells where groundwater is discharging to the surface.
+
+The following Python code demonstrates the steps for plotting a cross-section of simulated heads and the model grid for the \texttt{gwf} model along an arbitrary line using a list of xy tuples defining the vertices of the line. For structured grids, cross-sections can also be specified along a row or column.
 
 \begin{python}
 >>> fx = flopy.plot.PlotCrossSection(model=gwf, 
@@ -387,31 +403,29 @@ Cross-sections
 >>> plt.show()
 \end{python}
 
-%\lipsum[54]
+\noindent The \texttt{head=} keyword option \texttt{plot\_array()} method in the python code demonstrated above limits the color flood to the saturated thickness of water in each cell. Figure~\ref{fig:flopyplots}\textit{C} and \textit{D} show the outcome of the python code demonstrated along cross-section lines A--A' and B--B' (shown in Figure~\ref{fig:flopyplots}\textit{A}) above with fine-grained control of grid lines, text, annotations, tick locations, and axis labels. Note that the color flood of head in Figure~\ref{fig:flopyplots}\textit{C} and \textit{D} shows that unconfined conditions occur in higher elevation cells or cells adjacent to river cells.
 
 \begin{figure}[ht!]
 	\begin{center}
 		\includegraphics{figures/grids_flopy_plots.png}
 	\end{center}
-	\caption{FloPy plotting.}
+	\caption{Examples of FloPy map and cross-section plotting capabilities for a model discretized using a voronoi grid (Figure~\ref{fig:grids}\textit{F}). (A) Map showing simulated heads and specific-discharge vectors in the upper-most saturated cells. (B) Map showing the layer containing the water table, the location of cells where the aquifer is discharge to rivers represented as drain cells, and the location of cells where groundwater is discharging to the land surface. (C) East-West cross-section along line A--A', shown on Figure~\ref{fig:flopyplots}\textit{A}, showing the model grid, simulated heads, and cells where water-table conditions exist. (D) North-South cross-section along line B--B', shown on Figure~\ref{fig:flopyplots}\textit{A}, showing the model grid, simulated heads, and cells where water-table conditions exist.}
 	\label{fig:flopyplots}
 \end{figure}
 
-%\lipsum[2-4]
-
 \subsection{Exporting Grid Data to Other Formats}
 
-Model input and output can be exported in a variety of standard formats using the \texttt{export()} method, which is available for FloPy model objects, package objects, and binary dependent-variable (head, concentration, \textit{etc.}) and cell-by-cell output files. Standard output formats that are currently supported include shapefiles \citep{environmental1998esri}, NetCDF files \citep{rew2006netcdf, rew1990netcdf}, and Visualization Tool Kit (VTK) files \citep{schroeder:2006:VTK}.
+Model input and output can be exported in a variety of standard formats using the \texttt{export()} method, which is available for FloPy model objects, package objects, binary dependent-variable (head, concentration, \textit{etc.}), and cell-by-cell output files. Standard output formats that are currently supported include shapefiles \citep{environmental1998esri}, NetCDF files \citep{rew2006netcdf, rew1990netcdf}, and Visualization Tool Kit (VTK) files \citep{schroeder:2006:VTK}. Entire models, packages, individual package arrays, binary dependent-variables (for example heads), or three-dimensional representations of binary cell-by-cell data can be exported. Shapefile and VTK output can be exported for all grid types but NetCDF files can currently only be exported for structured grids. The NetCDF output capability has been used to convert entire models and associated output so that it can be rendered in the GWWebFlow viewer \citep{gswebflow2018}.
 
-shapefiles (all grids), VTK (all grids) and NetCDF (structured grids). NetCDF files are being used, for example, by the GWWebFlow viewer? 
+The following Python code demonstrates the steps for exporting the  \texttt{gwf} model as a VTK dataset with flat cell tops and bottoms (stair-case representation).
 
 \begin{python}
->>> gwf.export("temp_vtk/vtk_smooth", fmt='vtk', smooth=True,
+>>> gwf.export("temp_vtk/vtk_smooth", fmt='vtk', smooth=False,
 ... vertical_exageration=500.0, pvd=True)
 ...
 \end{python}
 
-%\lipsum[2-6]
+\noindent VTK models can also be exported with smooth cell tops and bottoms using elevations interpolated to the cell vertices. Other supported export formats can be created by specifing the file extension to be \texttt{.shp} for shapefiles, \texttt{.nc} for NetCDF files, or if the \texttt{fmt} keyword is \texttt{vtk} (as shown above) for VTK files.  Figure~\ref{fig:flopyvtk} shows stair-case and smooth VTK exports of the model described in Section~\ref{sec:plotting} and rendered with Paraview \citep{ahrens2005paraview}.
 
 \begin{figure}[ht!]
 	\begin{center}
@@ -421,11 +435,13 @@ shapefiles (all grids), VTK (all grids) and NetCDF (structured grids). NetCDF fi
 	\label{fig:flopyvtk}
 \end{figure}
 
-%\lipsum[2-4]
-
 \section{Scripting MODFLOW 6 Model Development Using Python and FloPy}
 
-\citep{hill1998} presented a synthetic test case (Synthetic Valley) of an undeveloped alluvial valley surrounded by low permeability bedrock. The model included Blue Lake and Straight River surface water features. The model presented in \cite{hill1998} was simulated using MODFLOWP \citep{hill1992computer} using a structured grid with a constant 152.4 meter grid spacing and five model layers. To demonstrate that capabilities of FloPy and MODFLOW 6 we discretized the 6,096 meter x 3,810 meter model domain using a \texttt{VertexGrid} and the discretization by vertices (DISV) package (Figure~\ref{fig:mvgrid}\textit{A}).
+\citep{hill1998} presented a synthetic test case (Synthetic Valley) of an undeveloped alluvial valley surrounded by low permeability bedrock. The model included Blue Lake and Straight River surface water features (Figure~\ref{fig:mvgrid}\textit{A}). The model presented in \cite{hill1998} was simulated using MODFLOWP \citep{hill1992computer} using a structured grid with a constant 152.4 meter grid spacing, three model layers, and 1,000 active cells per layer. The upper two layers represented an unconfined aquifer and the third layer represented a lower aquifer unit that is separated from the overlying aquifer by a confining unit in the northern part of the model domain (Figure~\ref{fig:mvgrid}\textit{A}). The confining unit was not explicitly represented, instead a low vertical leakance value between layer 2 and 3 was used to represent the confining unit.
+
+To demonstrate that capabilities of FloPy and MODFLOW 6 we discretized the 6,096 meter x 3,810 meter model domain using a \texttt{VertexGrid}, with 6,343 active cells per layer, and the discretization by vertices (DISV) package (Figure~\ref{fig:mvgrid}\textit{A}). The original model simulated the confining usint
+
+In this example we are going to simulate 
 
 %\lipsum[12-18]
 
