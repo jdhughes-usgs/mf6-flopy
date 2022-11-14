@@ -362,7 +362,7 @@ Normal Termination
 
 \subsection{Plotting}
 
-FloPy plotting functions presented in \cite{bakker2016scripting} have been updated to support plotting unstructured models in map and cross-section view using \texttt{.PlotMapView()} and \texttt{.PlotCrossSection()}, respectively. The plotting methods available with \texttt{.PlotMapView()} and \texttt{.PlotCrossSection()} are thin wrappers around matplotlib plotting methods and allow fine-grained control using matplotlib \texttt{kwargs}. 
+FloPy plotting functions presented in \cite{bakker2016scripting} have been updated to support plotting both structured and unstructured models in map and cross-section view using \texttt{.PlotMapView()} and \texttt{.PlotCrossSection()}, respectively. The plotting methods available with \texttt{.PlotMapView()} and \texttt{.PlotCrossSection()} are thin wrappers around matplotlib plotting methods and allow fine-grained control using matplotlib keyword arguments (\texttt{kwargs}). 
 
 
 Maps
@@ -371,7 +371,7 @@ Maps
 >>> mm = flopy.plot.PlotMapView(model=gwf)
 >>> cb = mm.plot_array(head, edgecolor="0.5")
 >>> mm.plot_bc("CHD")
->>> mm.plot_vector(qx_top, qy_top, normalize=True)
+>>> mm.plot_vector(qx, qy, normalize=True)
 >>> plt.colorbar(cb, orientation="horizontal");
 >>> plt.show()
 \end{python}
