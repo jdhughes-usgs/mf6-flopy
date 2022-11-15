@@ -87,6 +87,7 @@ xleftmargin=0.5cm,
 
 
 \usepackage{natbib}
+\setcitestyle{aysep={}} 
 
 \usepackage{lipsum} 
 
@@ -437,11 +438,7 @@ The following Python code demonstrates the steps for exporting the  \texttt{gwf}
 
 \section{Scripting MODFLOW 6 Model Development Using Python and FloPy}
 
-\citep{hill1998} presented a synthetic test case (Synthetic Valley) of an undeveloped alluvial valley surrounded by low permeability bedrock. The model included Blue Lake and Straight River surface water features (Figure~\ref{fig:mvgrid}\textit{A}). The model presented in \cite{hill1998} was simulated using MODFLOWP \citep{hill1992computer} using a structured grid with a constant 152.4 meter grid spacing, three model layers, and 1,000 active cells per layer. The upper two layers represented an unconfined aquifer and the third layer represented a lower aquifer unit that is separated from the overlying aquifer by a confining unit in the northern part of the model domain (Figure~\ref{fig:mvgrid}\textit{A}). The confining unit was not explicitly represented, instead a low vertical leakance value between layer 2 and 3 was used to represent the confining unit.
-
-To demonstrate that capabilities of FloPy and MODFLOW 6 we discretized the 6,096 meter x 3,810 meter model domain using a \texttt{VertexGrid}, with 6,343 active cells per layer, and the discretization by vertices (DISV) package (Figure~\ref{fig:mvgrid}\textit{A}). The original model simulated the confining usint
-
-In this example we are going to simulate 
+\cite{hill1998} presented a synthetic test case (Synthetic Valley) of an undeveloped alluvial valley surrounded by low permeability bedrock. The model included Blue Lake and Straight River surface water features (Figure~\ref{fig:mvgrid}\textit{A}). The model presented in \cite{hill1998} was simulated using MODFLOWP \citep{hill1992computer} using a structured grid with a constant 152.4 meter grid spacing, three model layers, and 1,000 active cells per layer. The upper two layers represented an unconfined aquifer and the third layer represented a lower aquifer unit that is separated from the overlying aquifer by a confining unit in the northern part of the model domain (Figure~\ref{fig:mvgrid}\textit{A}). The confining unit was not explicitly represented, instead a low vertical leakance value between layer 2 and 3 was used to represent the confining unit.
 
 %\lipsum[12-18]
 
@@ -453,7 +450,7 @@ In this example we are going to simulate
 	\label{fig:mvgrid}
 \end{figure}
 
-%\lipsum[2-4]
+To demonstrate that capabilities of FloPy and MODFLOW 6 we discretized the 6,096 meter x 3,810 meter model domain using a \texttt{VertexGrid}, with 6,343 active cells per layer, and the discretization by vertices (DISV) package (Figure~\ref{fig:mvgrid}\textit{A}).  In this example we simulate groundwater flow and transport, as a result, the lower aquifer has been discretized into 3 layers. Confining units have to be explicitly simulated in MODFLOW 6, therefore, a total of six layers are simulated. The bottom of layers 1, 2, 3, and 4 were set to constant values of -1.53, -15.24, -15.55 and -30.48 meters, respectively. The bottom of the model (layer 6) is based on \cite{hill1998} and the bottom of layer 5 was specified to be half the distance between the bottom of layers 4 and 6. The top of the model was developed from topographic contours developed for model that was used as the starting point for \cite{hill1998} \citep{pollock2014percomm}; the top of the model is shown in Figure~\ref{fig:mvmap}\textit{A}. The top of the model and the bottom of layers 6 were resampled from the data used in the structured grid model using the \texttt{.resample\_to\_grid()} method and linear interpolation.  Figure~\ref{fig:mvxsection} shows the vertical discretization along cross-section lines A--A' and B--B', which are shown in Figure~\ref{fig:mvmap}\textit{A}. The groundwater flow and transport models were run for a total of 30 years. The groundwater flow model used a single steady-state time step and groundwater flow results were used to run the transport model with a total of 360 time steps with a constant length of 30.4375 days.
 
 \begin{figure}[ht!]
 	\begin{center}
@@ -463,7 +460,7 @@ In this example we are going to simulate
 	\label{fig:mvmap}
 \end{figure}
 
-%\lipsum[2-4]
+Hydraulic properties for the model were resampled from the data used in the structured grid model that was used as the starting point for \cite{hill1998} \citep{pollock2014percomm}. The horizontal hydraulic conductivity was discretized into five zones with values of 45.72, 50.29, 60.96, 83.82, and 121.92 meters/day; the lowest hydraulic conductivities were located south of Blue Lake and the highest hydraulic conductivities were under Blue Lake.
 
 \begin{figure}[ht!]
 	\begin{center}
@@ -473,7 +470,6 @@ In this example we are going to simulate
 	\label{fig:mvxsection}
 \end{figure}
 
-%\lipsum[2-4]
 
 \begin{figure}[ht!]
 	\begin{center}
