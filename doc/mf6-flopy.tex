@@ -226,7 +226,7 @@ FloPy also provides a wrapper utility for the Triangle mesh generation program \
 ...
 \end{python}
 
-A triangular grid can be converted into a Voronoi grid using the \texttt{VoronoiGrid()} utility class within FloPy. This utility class uses SciPy routines \citep{2020SciPy-NMeth} to construct Voronoi polygons around each vertex in the triangular mesh. Figure \ref{fig:grids}F shows an example of a Voronoi grid created from the triangular mesh shown in Figure \ref{fig:grids}D. The steps for creating the voronoi grid from the Triangle object are shown below.
+A triangular grid can be converted into a Voronoi grid using the \texttt{VoronoiGrid()} utility class within FloPy. This utility class uses SciPy routines \citep{2020SciPy-NMeth} to construct Voronoi polygons around each vertex in the triangular mesh. Figure \ref{fig:grids}F shows an example of a Voronoi grid created from the triangular mesh shown in Figure \ref{fig:grids}D. The steps for creating the Voronoi grid from the Triangle object are shown below.
 
 \begin{python}
 >>> vor = flopy.utils.voronoi.VoronoiGrid(tri)
@@ -236,7 +236,7 @@ A triangular grid can be converted into a Voronoi grid using the \texttt{Voronoi
 
 \texttt{StructuredGrid}, \texttt{VertexGrid}, and \texttt{UnstructuredGrid} grid objects have useful properties (\texttt{.property}) and methods (\texttt{.method()}) for accessing or mapping locations on the model grid including: (1) conversion of xy pairs from local to global coordinates (\texttt{.get\_coords()}) and from global to local coordinates (\texttt{.get\_local\_coords()}); (2) getting x, y, and z coordinates for cell centers (\texttt{.xcellcenters}, \texttt{.ycellcenters}, \texttt{.zcellcenters}, and \texttt{.xyzcellcenters}) and vertices (\texttt{.xvertices}, \texttt{.yvertices}, \texttt{.zvertices}, and \texttt{.xyzvertices}); (3) intersecting a list of xy pairs with the grid and returning the appropriate \texttt{cellid} (\texttt{.intersect()}). Other interesting grid object properties and methods include generating a grid object from a MODFLOW 6 binary grid file (\texttt{.from\_binary\_grid\_file()}), calculating the cell thickness for each cell (\texttt{.thick}), and the saturated thickness for each cell (\texttt{.saturated\_thick}).
 
-The ability to develop model grid types using FloPy allows for innovation in the way a study area is discretized in order to tailor the grid to the needs of the study. For example, \cite{Moussa2018} used a voronoi grid to add additional resolution in the vicinity of irrigation wells in the Frenchman Creek Basin in Nebraska, USA to quantify the effects of land-use change and irrigation on streamflow depletion. Furthermore, the ability to develop multi-model simulations using FloPy allows higher-resolution inset models to be added in focused areas. \cite{fienen2022simulation} used focused inset models implicitly coupled to a coarse regional model and solved as a single system of equations to better represent lakes and quantify lake/groundwater interactions in the Central Sands region in Wisconsin, USA. Inset models of lakes in \cite{fienen2022simulation} were developed using \texttt{modflow-setup} \citep{leaf2022modflow}, which relies on FloPy functionality to generate MODFLOW 6 datasets.
+The ability to develop model grid types using FloPy allows for innovation in the way a study area is discretized in order to tailor the grid to the needs of the study. For example, \cite{Moussa2018} used a Voronoi grid to add additional resolution in the vicinity of irrigation wells in the Frenchman Creek Basin in Nebraska, USA to quantify the effects of land-use change and irrigation on streamflow depletion. Furthermore, the ability to develop multi-model simulations using FloPy allows higher-resolution inset models to be added in focused areas. \cite{fienen2022simulation} used focused inset models implicitly coupled to a coarse regional model and solved as a single system of equations to better represent lakes and quantify lake/groundwater interactions in the Central Sands region in Wisconsin, USA. Inset models of lakes in \cite{fienen2022simulation} were developed using \texttt{modflow-setup} \citep{leaf2022modflow}, which relies on FloPy functionality to generate MODFLOW 6 datasets.
 
 \subsection{Geospatial Processing}
 
@@ -410,7 +410,7 @@ The following Python code demonstrates the steps for plotting a cross-section of
 	\begin{center}
 		\includegraphics{figures/grids_flopy_plots.png}
 	\end{center}
-	\caption{Examples of FloPy map and cross-section plotting capabilities for a model discretized using a voronoi grid (Figure~\ref{fig:grids}\textit{F}). (A) Map showing simulated heads and specific-discharge vectors in the upper-most saturated cells. (B) Map showing the layer containing the water table, the location of cells where the aquifer is discharge to rivers represented as drain cells, and the location of cells where groundwater is discharging to the land surface. (C) East-West cross-section along line A--A', shown on Figure~\ref{fig:flopyplots}\textit{A}, showing the model grid, simulated heads, and cells where water-table conditions exist. (D) North-South cross-section along line B--B', shown on Figure~\ref{fig:flopyplots}\textit{A}, showing the model grid, simulated heads, and cells where water-table conditions exist.}
+	\caption{Examples of FloPy map and cross-section plotting capabilities for a model discretized using a Voronoi grid (Figure~\ref{fig:grids}\textit{F}). (A) Map showing simulated heads and specific-discharge vectors in the upper-most saturated cells. (B) Map showing the layer containing the water table, the location of cells where the aquifer is discharge to rivers represented as drain cells, and the location of cells where groundwater is discharging to the land surface. (C) East-West cross-section along line A--A', shown on Figure~\ref{fig:flopyplots}\textit{A}, showing the model grid, simulated heads, and cells where water-table conditions exist. (D) North-South cross-section along line B--B', shown on Figure~\ref{fig:flopyplots}\textit{A}, showing the model grid, simulated heads, and cells where water-table conditions exist.}
 	\label{fig:flopyplots}
 \end{figure}
 
@@ -438,7 +438,7 @@ The following Python code demonstrates the steps for exporting the  \texttt{gwf}
 
 \section{Scripting MODFLOW 6 Model Development Using Python and FloPy}
 
-\cite{hill1998} presented a synthetic test case (Synthetic Valley) of an undeveloped alluvial valley surrounded by low permeability bedrock. The model included Blue Lake and Straight River surface water features (Figure~\ref{fig:mvgrid}\textit{A}). The model presented in \cite{hill1998} was simulated using MODFLOWP \citep{hill1992computer} using a structured grid with a constant 152.4 meter grid spacing, three model layers, and 1,000 active cells per layer. The upper two layers represented an unconfined aquifer and the third layer represented a lower aquifer unit that is separated from the overlying aquifer by a confining unit in the northern part of the model domain (Figure~\ref{fig:mvgrid}\textit{A}). The confining unit was not explicitly represented, instead a low vertical leakance value between layer 2 and 3 was used to represent the confining unit.
+\cite{hill1998} presented a synthetic test case (Synthetic Valley) of an undeveloped alluvial valley surrounded by low permeability bedrock. The model included Blue Lake and Straight River surface water features (Figure~\ref{fig:mvgrid}\textit{A}). The model presented in \cite{hill1998} was simulated using MODFLOWP \citep{hill1992computer} using a structured grid with a constant 152.4 meter grid spacing, three model layers, and 1,000 active cells per layer. The upper two layers represented an unconfined aquifer and the third layer represented a lower aquifer unit that is separated from the overlying aquifer by a confining unit in the northern part of the model domain (Figure~\ref{fig:mvgrid}\textit{A}). The confining unit was not explicitly represented, instead a low vertical leakance value between layer 2 and 3 was used to represent the confining unit. All pre- and post-processing of Synthetic Valley model data was done using FloPy grid, geospatial processing, MODFLOW 6 processing, and plotting functionality discussed previously.
 
 %\lipsum[12-18]
 
@@ -446,40 +446,71 @@ The following Python code demonstrates the steps for exporting the  \texttt{gwf}
 	\begin{center}
 		\includegraphics{figures/mv_voronoi_river_discretization.png}
 	\end{center}
-	\caption{McDonald Valley grid intersections.}
+	\caption{Synthetic Valley model used to demonstrate the MODFLOW 6 capabilities of FloPy. (A) Map showing the Voronoi grid used to discretized the model domain and the location of Blue Lake, Straight River, and the areal extent of the confining unit separating the upper and lower aquifer units. (B) Map showing model cells intersecting the northern end of Straight River. (C) Map showing model cells intersecting the southern end of Straight River. The cell centroid and cell numbers in the inset areas at the northern and southern end of Straight River are also shown on (B) and (C).}
 	\label{fig:mvgrid}
 \end{figure}
 
-To demonstrate that capabilities of FloPy and MODFLOW 6 we discretized the 6,096 meter x 3,810 meter model domain using a \texttt{VertexGrid}, with 6,343 active cells per layer, and the discretization by vertices (DISV) package (Figure~\ref{fig:mvgrid}\textit{A}).  In this example we simulate groundwater flow and transport, as a result, the lower aquifer has been discretized into 3 layers. Confining units have to be explicitly simulated in MODFLOW 6, therefore, a total of six layers are simulated. The bottom of layers 1, 2, 3, and 4 were set to constant values of -1.53, -15.24, -15.55 and -30.48 meters, respectively. The bottom of the model (layer 6) is based on \cite{hill1998} and the bottom of layer 5 was specified to be half the distance between the bottom of layers 4 and 6. The top of the model was developed from topographic contours developed for model that was used as the starting point for \cite{hill1998} \citep{pollock2014percomm}; the top of the model is shown in Figure~\ref{fig:mvmap}\textit{A}. The top of the model and the bottom of layers 6 were resampled from the data used in the structured grid model using the \texttt{.resample\_to\_grid()} method and linear interpolation.  Figure~\ref{fig:mvxsection} shows the vertical discretization along cross-section lines A--A' and B--B', which are shown in Figure~\ref{fig:mvmap}\textit{A}. The groundwater flow and transport models were run for a total of 30 years. The groundwater flow model used a single steady-state time step and groundwater flow results were used to run the transport model with a total of 360 time steps with a constant length of 30.4375 days.
+\subsection{Model Discretization}
+
+To demonstrate that capabilities of FloPy and MODFLOW 6 we discretized the 6,096 meter x 3,810 meter model domain using a Voronoi grid, with 6,343 active cells per layer, and the discretization by vertices (DISV) package (Figure~\ref{fig:mvgrid}\textit{A}). The model grid developed using the \texttt{Triangle()} and \texttt{VoronoiGrid()} utility classes. The model grid was refined under Blue Lake, using a 750 m buffer around Straight River,  and using a 100 m buffer around pumping wells P1, P2, and P3.
+
+In this example we simulate groundwater flow and transport, as a result, the lower aquifer has been discretized into 3 layers. Confining units have to be explicitly simulated in MODFLOW 6, therefore, a total of six layers are simulated. The bottom of layers 1, 2, 3, and 4 were set to constant values of -1.53, -15.24, -15.55 and -30.48 meters, respectively. In areas where the confining unit does not exist, the \texttt{idomain} concept was used to eliminate model layer 3 (\texttt{idomain=-1}) in cells where the confining unit does not exist. In these areas, the bottom of layer 2 was set equal to the bottom of layer 3 (-15.55 meters) and \texttt{idomain} was set to -1 (vertical pass through cells). 
+
+The bottom of the model (layer 6) is based on \cite{hill1998} and the bottom of layer 5 was specified to be half the distance between the bottom of layers 4 and 6. The top of the model was developed from topographic contours developed for model that was used as the starting point for \cite{hill1998} \citep{pollock2014percomm}; the top of the model is shown in Figure~\ref{fig:mvmap}\textit{A}. The top of the model and the bottom of layers 6 were resampled from the data used in the structured grid model using the \texttt{.resample\_to\_grid()} method and linear interpolation.  Figure~\ref{fig:mvxsection} shows the vertical discretization along cross-section lines A--A' and B--B', which are shown in Figure~\ref{fig:mvmap}\textit{A}. The groundwater flow and transport models were run for a total of 30 years. The groundwater flow model used a single steady-state time step and groundwater flow results were used to run the transport model with a total of 360 time steps with a constant length of 30.4375 days.
 
 \begin{figure}[ht!]
 	\begin{center}
 		\includegraphics{figures/mv_voronoi_map.png}
 	\end{center}
-	\caption{McDonald Valley topography and head.}
+	\caption{Map showing Synthetic Valley model (A) topography and (B) simulated steady-state heads and specific discharge rates in model layer 1. Cross-section lines A--A' and B--B' shown in Figure~\ref{fig:mvxsection} are also shown on (A).}
 	\label{fig:mvmap}
 \end{figure}
-
-Hydraulic properties for the model were resampled from the data used in the structured grid model that was used as the starting point for \cite{hill1998} \citep{pollock2014percomm}. The horizontal hydraulic conductivity was discretized into five zones with values of 45.72, 50.29, 60.96, 83.82, and 121.92 meters/day; the lowest hydraulic conductivities were located south of Blue Lake and the highest hydraulic conductivities were under Blue Lake.
 
 \begin{figure}[ht!]
 	\begin{center}
 		\includegraphics{figures/mv_voronoi_xsection.png}
 	\end{center}
-	\caption{McDonald Valley topography and head.}
+	\caption{Cross-section of Synthetic Valley model grid and simulated steady-state heads along cross-section line (A) A--A' and (B) B--B'. The location of Blue Lake and pumping well P-2 are also shown on (A).}
 	\label{fig:mvxsection}
 \end{figure}
 
+\subsection{Hydraulic and Transport Properties}
+
+Hydraulic properties for the model were resampled from the data used in the structured grid model that was used as the starting point for \cite{hill1998} \citep{pollock2014percomm}. The horizontal hydraulic conductivity was discretized into five zones with values of 45.72, 50.29, 60.96, 83.82, and 121.92 meters/day; the lowest hydraulic conductivity zone was located south of Blue Lake and the highest hydraulic conductivity zone was located beneath Blue Lake. The vertical hydraulic conductivity in the upper and lower aquifer was specified to be one quarter of the horizontal hydraulic conductivity. The vertical and horizontal conductivity in the confining unit was set equal to 9.14$\times10^{-4}$ m/day. For the groundwater transport model the porosity was set to 0.2 in the upper and lower aquifer and 0.4 for cells in the confining unit.  For the transport model, the Total Variation Diminishing scheme was used to simulate advection and a  molecular dispersion coefficient of 0 m$^2$/day, longitudinal dispersivity of 75 meters, and transverse dispersivity of 7.5 meters was specified.
+
+\subsection{Stress Packages}
+
+In \cite{hill1998}, Straight River was simulated as head-dependent river (RIV) package cells and Blue Lake was simulated as a high-hydraulic conductivity feature in model layer 1. We have simulated Straight River using the streamflow routing (SFR) package and Blue Lake using the LAK package. The location of the cells in model layer 1 with SFR or LAK package cells were determined using \texttt{GridIntersect().intersect()} FloPy functionality (Figure~\ref{fig:mvmap}\textit{A}). 
+
+Straight River was discretized into 108 reaches. Cells that intersect the northern and southern end of Straight River are shown in Figures~\ref{fig:mvmap}\textit{B} and \textit{C}. The bed thickness and  width of each SFR reach was specified to be 0.3048 and 3.048 meters, respectively. The leakance for each SFR reach was calculated using the bed thickness, reach width, and reach length in each cell and based on a total Straight River conductance of 50,971.72 m$^2$/day. A specified rainfall rate of 0.0025 meters/day and a potential evaporation rate of  0.0019 meters/day was defined for each Straight River reach.
+
+Blue Lake was simulated as a lake on top of the model grid and only had vertical connections to 1,406 cells in the underlying upper aquifer (model layer 1). A bed leakance of 0.0013 meters/day was specified for each cell connected to Blue Lake. A specified rainfall rate of 0.0025 meters/day and a potential evaporation rate of 0.0019 meters/day was defined Blue Lake.
+
+Drain (DRN) cells were specified in each cell in model layer 1 that was not connected to Blue Lake to prevent water levels from exceeding the top of the model. The conductance of each DRN cell was based on the horizontal cell area, a thickness of 0.3048 meters, and a vertical hydraulic conductivity of 0.03048 meters/day. The drainage conductance was scaled from 0 to 100\% of the specified conductance from 1 meter below the top of the model to the top of the model, respectively.
+
+Areal specified recharge and potential evapotranspiration rates of 0.0025 and 0.0019 meters/day were specified using the recharge (RCH) and evapotranspiration (EVT) packages. The EVT surface was specified to be the top of the model and the EVT extinction depth was specified to be 1 meter.
+
+The location of pumping wells P1, P2, and P3 were determined using \texttt{GridIntersect().intersect()} FloPy functionality (Figure~\ref{fig:mvmap}\textit{A}). Pumping rates of -7,600, -7,600, and -1,900 m$^3$/day were specified for pumping wells P1, P2, and P3, respectively.
+
+Transport was not simulated in the LAK and SFR packages. A specified concentration boundary with a concentration of 1.0 mg/L was specified for Blue Lake concentrations. All other stress packages were assumed to have a concentration of 0 mg/L.
+
+\subsection{Initial Conditions}
+
+An initial head of 11 meters was specified for every cell. An initial stage of 3.44 meters was specified for Blue Lake. An initial concentration of 0 mg/L was specified for the transport model.
+
+\subsection{Simulated Results}
+
+Simulated heads and vectors of specific discharge in model layer 1 are shown in Figure~\ref{fig:mvmap}\textit{B}.  Specific discharge is greatest on the east side of Blue Lake and in the vicinity of the three pumping wells and Straight River. Cross-sections showing simulated heads along cross-sections A--A' and B--B' are shown in Figure~\ref{fig:mvxsection}. The cross-sections show that water table conditions occur in most of the model domain except in the vicinity of Blue Lake.
+
+Simulated concentrations at the end of 30-years in all six model layers are shown in Figure~\ref{fig:mvxsection}. Simulated concentrations are highest underneath Blue Lake in model layer 1 and do not vary much in model layers 1 and 2. Simulated concentrations in model layer 3 are limited to the extent of the confining unit because the remaining cells in the layer are defined to be vertical pass through cells (\texttt{idomain=-1}). The lateral extent of concentrations does not vary much south of Blue Lake because of the lack of confinement in these areas.
 
 \begin{figure}[ht!]
 	\begin{center}
 		\includegraphics{figures/mv_voronoi_map_concentration.png}
 	\end{center}
-	\caption{McDonald Valley concentrations.}
+	\caption{Maps showing Synthetic Valley simulated concentrations at the end of 30 years in model layer (A) 1, (B) 2, (C) 3, (D) 4, (E) 5, and (F) 6. The extent of the confining unit in model layer 3 is also shown on (C).}
 	\label{fig:mvxsection}
 \end{figure}
-
-%\lipsum[2-4]
 
 \section{Summary and Conclusions}
 FloPy is a popular Python package for building, running, and post processing groundwater models. It is open source and developed with input from a growing community of modelers. This paper summarizes important new FloPy capabilities that have been added since the package was first described by \citep{bakker2016scripting}. The new capabilities can be summarized as follows.
