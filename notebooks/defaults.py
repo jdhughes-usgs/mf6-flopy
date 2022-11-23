@@ -35,6 +35,7 @@ clabel_dict = {
 }
 font_dict = {"fontsize": 5, "color": "black"}
 grid_dict = {"lw": 0.25, "color": "0.5"}
+refinement_dict = {"color": "magenta", "ls": ":", "lw": 1.0}
 arrowprops = dict(
     arrowstyle="-",
     edgecolor="red",
