@@ -285,6 +285,8 @@ notebooks/temp_topo/
 notebooks/temp_vtk/
 notebooks/triangle_data/
 notebooks/figures/
+notebooks/basin/
+notebooks/basin_split/
 .ipynb_checkpoints/
 doc/figures/~*
 doc/*.pdf
