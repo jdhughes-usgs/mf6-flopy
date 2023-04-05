@@ -2061,9 +2061,11 @@ class Mf6Splitter(object):
         nmodels = list(self._model_dict.keys())
         if self._model_type.lower() == "gwf":
             exchgtype = "GWF6-GWF6"
+            extension = "gwfgwf"
             exchgcls = flopy.mf6.ModflowGwfgwf
         elif self._model_type.lower() == "gwt":
             exchgtype = "GWT6-GWT6"
+            extension = "gwtgwt"
             exchgcls = flopy.mf6.ModflowGwtgwt
         else:
             raise NotImplementedError()
@@ -2099,7 +2101,8 @@ class Mf6Splitter(object):
                             exgmnamea=mname0,
                             exgmnameb=mname1,
                             nexg=len(exchange_data),
-                            exchangedata=exchange_data
+                            exchangedata=exchange_data,
+                            filename=f"sim_{m0}_{m1}.{extension}"
                         )
                         d[f"{mname0}_{mname1}"] = exchg
 
@@ -2171,7 +2174,7 @@ class Mf6Splitter(object):
                                 hwva = np.sqrt((x3 - x4) ** 2 + (y3 - y4) ** 2)
 
                                 # calculate angledegx and cdist
-                                angledegx = np.arctan2([x2 - x1], [y2 - y1, ])[0] * (180 / np.pi)
+                                angledegx = np.arctan2([y2 - y1], [x2 - x1])[0] * (180 / np.pi)
                                 if angledegx < 0:
                                     angledegx = 360 + angledegx
 
@@ -2211,7 +2214,7 @@ class Mf6Splitter(object):
                             auxiliary=["ANGLDEGX", "CDIST"],
                             nexg=len(exchange_data),
                             exchangedata=exchange_data,
-                            filename=f"sim_{m0}_{m1}.gwfgwf"
+                            filename=f"sim_{m0}_{m1}.{extension}"
                         )
                         d[f"{mname0}_{mname1}"] = exchg
 
@@ -2281,5 +2284,5 @@ class Mf6Splitter(object):
 # todo: development notes:
 #   Package obs...
 #   Then set up checks for model splitting
-#       (ex. doesnt parallel a fault, doesnt cut through a lake)
+#       (ex. doesnt parallel a fault, doesnt cut through a lake, active cells in modelgrid...)
 #   Finally deal with subpackages...
