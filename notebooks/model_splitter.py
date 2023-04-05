@@ -52,7 +52,27 @@ OBS_ID1_LUT = {
     "rch": "cellid",
     "riv": "cellid",
     "wel": "cellid",
-    "lak": "lakeno",
+    "lak": {
+        "stage": "lakeno",
+        "ext-inflow": "lakeno",
+        "outlet-inflow": "lakeno",
+        "inflow": "lakeno",
+        "from-mvr": "lakeno",
+        "rainfall": "lakeno",
+        "runoff": "lakeno",
+        "lak": "lakeno",
+        "withdrawal": "lakeno",
+        "evaporation": "lakeno",
+        "ext-outflow": "lakeno",
+        "to-mvr": "outletno",
+        "storage": "lakeno",
+        "constant": "lakeno",
+        "outlet": "outletno",
+        "volume": "lakeno",
+        "surface-area": "lakeno",
+        "wetted-area": "lakeno",
+        "conductance": "lakeno"
+    },
     "maw": "wellno",
     "sfr": "rno",
     "uzf": "iuzno",
@@ -140,6 +160,7 @@ class Mf6Splitter(object):
         self._mover_remaps = {}
         self._sim_mover_data = {}
         self._new_sim = None
+        self._offsets = {}
         # dictionaries of remaps necessary for piping GWF info to GWT
         self._uzf_remaps = {}
         self._lak_remaps = {}
@@ -199,6 +220,7 @@ class Mf6Splitter(object):
             self._pkg_mover_name = None
             self._mover_remaps = {}
             self._sim_mover_data = {}
+            self._offsets = {}
 
     def _remap_nodes(self, array):
         """
@@ -225,6 +247,10 @@ class Mf6Splitter(object):
                 rmin, rmax = np.min(cells[0]), np.max(cells[0])
                 cmin, cmax = np.min(cells[1]), np.max(cells[1])
                 cells = list(zip(cells[0], cells[1]))
+                self._offsets[m] = {
+                    "xorigin": self._modelgrid.xvertices[rmax + 1, cmin],
+                    "yorigin": self._modelgrid.yvertices[rmax + 1, cmin]
+                }
                 # get new nrow and ncol information
                 nrow = (rmax - rmin) + 1
                 ncol = (cmax - cmin) + 1
@@ -237,9 +263,28 @@ class Mf6Splitter(object):
                 grid_info[m] = [(nrow, ncol), (rmin, rmax), (cmin, cmax),
                                 np.ravel(mapping)]
         else:
+            xverts, yverts = self._irregular_shape_patch(
+                self._modelgrid.xvertices,
+                self._modelgrid.yvertices
+            )
             for m in np.unique(array):
                 cells = np.where(array == m)
                 grid_info[m] = [(len(cells[0]),), None, None, None]
+
+                # calculate grid offsets
+                if xverts is not None:
+                    mxv = xverts[cells[0]]
+                    myv = yverts[cells[0]]
+                    xmidx = np.where(mxv == np.nanmin(mxv))[0]
+                    myv = myv[xmidx]
+                    ymidx = np.where(myv == np.nanmin(myv))[0]
+
+                    self._offsets[m] = {
+                        "xorigin": np.nanmin(mxv[xmidx[0]]),
+                        "yorigin": np.nanmin(myv[ymidx][0])
+                    }
+                else:
+                    self._offsets[m] = {"xorigin": None, "yorigin": None}
 
         new_ncpl = {}
         for m in np.unique(array):
@@ -934,6 +979,7 @@ class Mf6Splitter(object):
         packagedata = package.packagedata.array
         perioddata = package.perioddata.data
 
+        obs_map = {"lakeno": {}, "outletno": {}}
         if isinstance(package, flopy.mf6.ModflowGwflak):
             connectiondata = package.connectiondata.array
             tables = package.tables.array
@@ -961,11 +1007,21 @@ class Mf6Splitter(object):
                     for nlak, lak in enumerate(sorted(np.unique(new_recarray.lakeno))):
                         lak_remaps[lak] = (mkey, nlak)
                         self._lak_remaps[name][lak] = (mkey, nlak)
+                        obs_map["lakeno"][lak] = (mkey, nlak)
 
                     new_lak = [lak_remaps[i][-1] for i in new_recarray.lakeno]
                     new_recarray["lakeno"] = new_lak
 
                     new_packagedata = self._remap_adv_tag(mkey, packagedata, "lakeno", lak_remaps)
+                    if "boundname" in new_packagedata.dtype.names:
+                        for bname in new_packagedata.boundname:
+                            if bname in obs_map["lakeno"]:
+                                if not isinstance(obs_map["lakeno"][bname], list):
+                                    obs_map["lakeno"][bname] = [obs_map["lakeno"][bname]]
+                                    obs_map["outleno"][bname] = [obs_map["outletno"][bname]]
+                                obs_map["outletno"][bname].append((mkey, bname))
+                            else:
+                                obs_map["outletno"][bname] = (mkey, bname)
 
                     new_tables = None
                     if tables is not None:
@@ -1010,10 +1066,15 @@ class Mf6Splitter(object):
             if self._pkg_mover:
                 self._set_mover_remaps(package, lak_remaps)
         else:
-            flow_package_name = package.flow_package_name.array
-            lak_remap = self._lak_remaps[flow_package_name]
+            name = package.flow_package_name.array
+            lak_remap = self._lak_remaps[name]
             mapped_data = self._remap_adv_transport(
                 package, "lakno", lak_remap, mapped_data
+            )
+
+        for obspak in package.obs._packages:
+            mapped_data = self._remap_obs(
+                obspak, mapped_data, obs_map, pkg_type=package.package_type
             )
 
         return mapped_data
@@ -1489,6 +1550,8 @@ class Mf6Splitter(object):
                 obs_packages = []
 
         obs_data = {mkey: {} for mkey in self._model_dict.keys()}
+        mm_keys = {}
+        mm_idx = []
         for obs_package in obs_packages:
             continuous_data = obs_package.continuous.data
             for ofile, recarray in continuous_data.items():
@@ -1504,15 +1567,42 @@ class Mf6Splitter(object):
                         new_cellid1[idx] = tmp_cellid
                 else:
                     obstype = OBS_ID1_LUT[pkg_type]
-                    if obstype is not "cellid":
+                    if obstype != "cellid":
                         obsid = []
                         for i in recarray.id:
                             try:
-                                obsid.append(int(i))
+                                obsid.append(int(i) - 1)
                             except ValueError:
                                 obsid.append(i)
-                        new_cellid1 = np.array([remapper[i][-1] for i in obsid], dtype=object)
-                        new_model1 = np.array([remapper[i][0] for i in obsid], dtype=int)
+
+                        if isinstance(obstype, dict):
+                            new_cellid1 = np.full(len(recarray), None, dtype=object)
+                            new_model1 = np.full(len(recarray), None, dtype=object)
+                            obstypes = [obstype for obstype in recarray.obstypes]
+                            idtype = [OBS_ID1_LUT[pkg_type][otype] for otype in obstypes]
+                            for idt in set(idtype):
+                                remaps = remapper[idt]
+
+                        else:
+                            new_cellid1 = np.array(
+                                [remapper[i][-1] + 1 if isinstance(i, int) else i for i in obsid],
+                                dtype=object
+                            )
+                            new_model1 = np.array([remapper[i][0] for i in obsid], dtype=object)
+
+                        # check if any boundnames cross model boundaries
+                        mm_idx = [idx for idx, v in enumerate(new_model1) if isinstance(v, tuple)]
+                        for idx in mm_idx:
+                            key = new_model1[idx][-1]
+                            for mdl, bname in remapper[key]:
+                                if key in mm_keys:
+                                    mm_keys[key].append(mdl)
+                                else:
+                                    mm_keys[key] = [mdl]
+
+                        tmp_models = [new_model1[idx][0] for idx in mm_idx]
+                        new_model1[mm_idx] = tmp_models
+
                     else:
                         # todo: need to check for boundnames and then do stuff...
                         pass
@@ -1571,6 +1661,14 @@ class Mf6Splitter(object):
                     new_model2 = new_model1
 
                 for mkey in self._model_dict.keys():
+                    # adjust model numbers if boundname crosses models
+                    if mm_keys:
+                        for idx in mm_idx:
+                            bname = new_cellid1[idx]
+                            model_nums = mm_keys[bname]
+                            if mkey in model_nums:
+                                new_model1[idx] = mkey
+
                     # now we remap the continuous data!!!!
                     idx = np.where(new_model1 == mkey)[0]
                     if len(idx) == 0:
@@ -1739,6 +1837,11 @@ class Mf6Splitter(object):
             dict
         """
         d0 = {mkey: {} for mkey in self._model_dict.keys()}
+        if mftransientlist.data is None:
+            for mkey in self._model_dict.keys():
+                mapped_data[mkey][item] = None
+            return mapped_data
+
         for per, recarray in mftransientlist.data.items():
             d, mvr_remaps = self._remap_mflist(item, recarray, mapped_data, transient=True)
             for mkey in self._model_dict.keys():
@@ -1824,6 +1927,11 @@ class Mf6Splitter(object):
                     mapped_data = self._remap_disu(mapped_data)
                     break
 
+                elif item == "xorigin":
+                    for mkey in self._model_dict.keys():
+                        for k, v in self._offsets[mkey].items():
+                            mapped_data[mkey][k] = v
+
                 elif isinstance(value, flopy.mf6.data.mfdataarray.MFArray):
                     mapped_data = self._remap_array(item, value, mapped_data)
 
@@ -1884,6 +1992,11 @@ class Mf6Splitter(object):
                                 mapped_data[mkey][item] = self._ivert_vert_remap[mkey][item]
                                 mapped_data[mkey]["nvert"] = len(self._ivert_vert_remap[mkey][item])
 
+                elif item == "xorigin":
+                    for mkey in self._model_dict.keys():
+                        for k, v in self._offsets[mkey].items():
+                            mapped_data[mkey][k] = v
+
                 elif isinstance(value, flopy.mf6.data.mfdataarray.MFArray):
                     mapped_data = self._remap_array(item, value, mapped_data)
 
@@ -1907,7 +2020,7 @@ class Mf6Splitter(object):
                     mapped_data = self._remap_filerecords(item, value, mapped_data)
                     continue
 
-                elif item in ("flow_package_name",):
+                elif item in ("flow_package_name", "xorigin", "yorigin"):
                     continue
 
                 for mkey in mapped_data.keys():
@@ -1930,12 +2043,8 @@ class Mf6Splitter(object):
                     parent = paks[mdl]
                     filename = f"{parent.quoted_filename}.obs"
                     obs = flopy.mf6.ModflowUtlobs(
-                        parent,
-                        pname="obs",
-                        filename=filename,
-                        **data
+                        parent, pname="obs", filename=filename, **data
                     )
-            print('break')
 
         return paks
 
@@ -1949,7 +2058,7 @@ class Mf6Splitter(object):
         """
         d = {}
         built = []
-        nmodels = len(self._model_dict)
+        nmodels = list(self._model_dict.keys())
         if self._model_type.lower() == "gwf":
             exchgtype = "GWF6-GWF6"
             exchgcls = flopy.mf6.ModflowGwfgwf
@@ -1964,7 +2073,7 @@ class Mf6Splitter(object):
             aux = False
             for m0, model in self._model_dict.items():
                 exg_nodes = self._new_connections[m0]["external"]
-                for m1 in range(nmodels):
+                for m1 in nmodels:
                     if m1 in built:
                         continue
                     if m1 == m0:
@@ -2006,7 +2115,7 @@ class Mf6Splitter(object):
             verts = self._modelgrid.verts
             for m0, model in self._model_dict.items():
                 exg_nodes = self._new_connections[m0]["external"]
-                for m1 in range(nmodels):
+                for m1 in nmodels:
                     if m1 in built:
                         continue
                     if m1 == m0:
@@ -2036,10 +2145,10 @@ class Mf6Splitter(object):
                                     cellidm1 = node1
 
                                 if modelgrid0.idomain is not None:
-                                    if modelgrid0.idomain[cellidm0] == 0:
+                                    if modelgrid0.idomain[cellidm0] <= 0:
                                         continue
                                 if modelgrid1.idomain is not None:
-                                    if modelgrid1.idomain[cellidm1] == 0:
+                                    if modelgrid1.idomain[cellidm1] <= 0:
                                         continue
                                 # calculate CL1, CL2 from exchange metadata
                                 meta = self._exchange_metadata[m0][node0][node1]
@@ -2102,6 +2211,7 @@ class Mf6Splitter(object):
                             auxiliary=["ANGLDEGX", "CDIST"],
                             nexg=len(exchange_data),
                             exchangedata=exchange_data,
+                            filename=f"sim_{m0}_{m1}.gwfgwf"
                         )
                         d[f"{mname0}_{mname1}"] = exchg
 
@@ -2142,11 +2252,18 @@ class Mf6Splitter(object):
             self._new_sim = flopy.mf6.MFSimulation()
             self._create_sln_tdis()
 
+
+        nam_options = {}
+        for item, value in self._model.name_file.blocks["options"].datasets.items():
+            if item == "list":
+                continue
+            nam_options[item] = value.array
         self._model_dict = {}
         for mkey in self._new_ncpl.keys():
+
             mdl_cls = PackageContainer.model_factory(self._model_type)
             self._model_dict[mkey] = mdl_cls(
-                self._new_sim, modelname=f"{self._modelname}_{mkey}"
+                self._new_sim, modelname=f"{self._modelname}_{mkey}", **nam_options
             )
 
         for package in self._model.packagelist:
