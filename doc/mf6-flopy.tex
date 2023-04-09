@@ -98,23 +98,26 @@ xleftmargin=0.5cm,
   urlcolor={blue!80!black}
 }
 
-\author{Joseph D. Hughes}
-\affil{U.S. Geological Survey, Model Support and Maintenance Branch, 927 W Belle Plaine Ave, Chicago, IL, USA}
-\author{Christian D. Langevin}
-\affil{U.S. Geological Survey, Model Support and Maintenance Branch, 2280 Woodale Dr, Mounds View, MN, USA}
-\author{Scott R. Paulinski}
-\affil{U.S. Geological Survey, California Water Science Center, 3130 Skyway Drive, Suite 602, Santa Maria, CA, USA}
-\author{Joshua D. Larsen}
-\affil{U.S. Geological Survey, California Water Science Center, 6000 J Street, Placer Hall, Sacramento, CA, USA}
-\author{David Brakenhoff}
-\affil{Artesia Water, Korte Weistraat 12, Schoonhoven, Netherlands}
+\author[1,*]{Joseph D. Hughes}
+\affil[1]{\small U.S. Geological Survey, Model Support and Maintenance Branch, 927 W Belle Plaine Ave, Chicago, IL, USA}
+\author[2]{Christian D. Langevin}
+\affil{\small U.S. Geological Survey, Model Support and Maintenance Branch, 2280 Woodale Dr, Mounds View, MN, USA}
+\author[3]{Scott R. Paulinski}
+\affil[3]{\small U.S. Geological Survey, California Water Science Center, 3130 Skyway Drive, Suite 602, Santa Maria, CA, USA}
+\author[4]{Joshua D. Larsen}
+\affil[4]{\small U.S. Geological Survey, California Water Science Center, 6000 J Street, Placer Hall, Sacramento, CA, USA}
+\author[5]{David Brakenhoff}
+\affil[5]{\small Artesia Water, Korte Weistraat 12, Schoonhoven, Netherlands}
+\affil[*]{\small Corresponding author jdhughes@usgs.gov}
 
 
 \begin{document}
 
 \onecolumn
+\raggedright
+\setlength\parindent{2em}
 
-\title{FloPy Workflows for Creating and Constructing Structured and Unstructured MODFLOW 6 Models} 
+\title{Research Paper/ \\FloPy Workflows for Creating and Constructing Structured and Unstructured MODFLOW 6 Models} 
 
 \maketitle
 
@@ -146,7 +149,7 @@ Development and testing of the MODFLOW 6 program relies heavily on tight integra
 
 \section*{Common Modeling Tasks}
 
-The code snippets presented in this section that demonstrate how to create model grids, geoprocess data, process output, plot model data, and export model data are available as Jupyter notebooks \citep{Kluyver:2016aa} at the hypothetical watershed internet address indicated in the \nameref{sec:summary} section.
+The code snippets presented in this section that demonstrate how to create model grids, geoprocess data, process output, plot model data, and export model data are available as Jupyter notebooks \citep{Kluyver:2016aa} at the internet address indicated in the \nameref{sec:summary} section.
 
 \subsection*{Getting MODFLOW and Other Related Executables}
 
@@ -548,5 +551,11 @@ Any use of trade, firm, or product names is for descriptive purposes only and do
 
 \bibliographystyle{groundwater}
 \bibliography{flopy}
+
+\begingroup
+	\hyphenpenalty10000
+	\renewcommand{\listfigurename}{Figure captions}
+	\listoffigures
+\endgroup
 
 \end{document}
