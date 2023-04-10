@@ -132,18 +132,18 @@ xleftmargin=0.5cm,
 
 FloPy is a Python package for constructing, running, and post processing MODFLOW-based groundwater flow and transport models \citep{bakker2016scripting}. It is open-source and developed by a growing community of contributors. The combination of open-source programming languages (such as Python) with version control software (such as Git) allow the model construction process to be documented, reproducible, and easily inspected and used by others. This workflow has been recommended as one way to facilitate repeatable research and sharing of ideas \citep{fienen2016}. \cite{bakker2016scripting} describe the general approach for working with models within the Python environment and emphasize the reproducible nature of developing models through scripting.
 
-FloPy has been used to pioneer new methods and analysis tools, such as deep learning approaches for improving groundwater model calibration \citep{sun2018, zhou2021}, regionalizing residence times using metamodeling \citep{starn2018}, applying iterative ensemble approaches for calibration and uncertainty quantification \citep{white2018ies}, and exploring alternative parameterization schemes for risk analysis \citep{knowling2019}. There are numerous examples of constructing MODFLOW models with FloPy to solve applied groundwater problems \citep{befus2017, vanengelen2018, ebeling2019, zipper2019, befus2020}. FloPy is used in GIS-based tools, such as FREEWAT \citep{freewat2018} and other cyberinfrastructures \citep{essawy2018} to export models into MODFLOW datasets. FloPy can also be used as the ``glue'' to help couple MODFLOW to other hydrological models \citep{burek2020} or, for example, to agent-based models designed to quantify the effects of decision makers on environmental behavior \citep{jaxarozen2019}. 
+FloPy has been used to pioneer new methods and analysis tools, such as deep learning approaches for improving groundwater model calibration \citep{sun2018, zhou2021}, regionalizing residence times using metamodeling \citep{starn2018}, applying iterative ensemble approaches for calibration and uncertainty quantification \citep{white2018ies}, and exploring alternative parameterization schemes for risk analysis \citep{knowling2019}. There are numerous examples of constructing MODFLOW models with FloPy to solve applied groundwater problems \citep{befus2017, vanengelen2018, ebeling2019, zipper2019, befus2020}. FloPy is being used in other software and workflows to improve repeatability and robustness through automated model construction \citep{white2020toward, fienen2022risk, larsen2022rapid, leaf2022modflow}. FloPy is also used in GIS-based tools, such as FREEWAT \citep{freewat2018} and other cyberinfrastructures \citep{essawy2018} to export models into MODFLOW datasets. FloPy can also be used as the ``glue'' to help couple MODFLOW to other hydrological models \citep{burek2020} or, for example, to agent-based models designed to quantify the effects of decision makers on environmental behavior \citep{jaxarozen2019}. 
 
 We use FloPy extensively to teach MODFLOW and groundwater modeling to early- and mid-career engineers and scientists. Other organizations also use FloPy to teach MODFLOW (\textit{e.g.}, Hatari Labs and the Australian Water School). Annotated Jupyter notebooks \citep{Kluyver:2016aa} and example scripts demonstrate concepts and provide a resource that can be used as templates for developing real-world model applications. We routinely rely on FloPy to load and help identify problems in user model applications, and with the initial release of the MODFLOW 6 groundwater flow model \citep{modflow6gwf}, we started to rely on FloPy to help with development of the MODFLOW program. We write tests that rely on FloPy to construct and run models, and then read output. We then verify that the output is as expected, by using analytical solutions, other models, or results that have been confirmed to be correct.
 
-The purpose of this paper is to highlight FloPy new functionality for creating and constructing structured and unstructured MODFLOW models. We provide examples that demonstrate these new capabilities, and reinforce the advantages of the modern scripting workflow for developing reproducible structured and unstructured MODFLOW groundwater flow and transport models that can be easily updated as new data become available. The examples also demonstrate workflows that develop different model grids for the same model domain. The important advances described here include (1) complete support for all models, packages, and options implemented in the core version of MODFLOW supported by the U.S. Geological Survey \citep{modflow6framework, modflow6gwf, modflow6xt3d, langevin2020hydraulic, morway2021use, modflow6gwt, modflow6csub, modflow6lkt}; (2) generalized support for models based on a regular grid consisting of layers, rows, and columns, and also for models based on unstructured grids; (3) implementation of new geoprocessing capabilities to rapidly populate models with data from a variety of input sources; (4) simplified access to model results; (5) plotting capabilities for map and cross-section views of model data; and (6) export capabilities for writing model data to a variety of output formats.
+The purpose of this paper is to highlight FloPy new functionality for creating and constructing structured and unstructured MODFLOW models. We provide examples that demonstrate these new capabilities, and reinforce the advantages of the modern scripting workflow for developing reproducible structured and unstructured MODFLOW groundwater flow and transport models that can be easily updated as new data become available. The examples also demonstrate workflows that develop different model grids for the same model domain. The important advances described here include (1) complete support for all models, packages, and options implemented in the core version of MODFLOW supported by the U.S. Geological Survey \citep{modflow6framework, modflow6gwf, modflow6xt3d, langevin2020hydraulic, morway2021use, modflow6gwt, modflow6csub, modflow6lkt}; (2) generalized support for models based on a structured grid consisting of layers, rows, and columns, and also for models based on unstructured grids; (3) implementation of new geoprocessing capabilities to rapidly populate models with data from a variety of input sources; (4) simplified access to model results; (5) plotting capabilities for map and cross-section views of model data; and (6) export capabilities for writing model data to a variety of output formats.
 
 
 \section*{FloPy Support for MODFLOW 6}
 
 The most recent version of MODFLOW (MODFLOW 6) is an object-oriented program and framework developed to provide a platform for supporting multiple models and multiple types of models within the same simulation \citep{modflow6framework}. These models can be independent of one another with no interaction, they can exchange coefficients and dependent variables (\textit{e.g.}, head), or they can be tightly coupled at the matrix level by adding them to the same numerical solution. Transfer of information between models is isolated to exchange objects, which allow models to be developed and used independently. Within this new framework, a regional-scale groundwater model may be coupled with multiple local-scale groundwater models. 
 
-MODFLOW 6 currently includes the Groundwater Flow (GWF) Model and the Groundwater Transport (GWT) Model each with packages to represent surface water processes, groundwater extraction, external boundaries, mass sources and sinks, and mass sorption and reactions. GWF and GWT models can be developed using regular model grids consisting of layers, rows, and columns or they can be developed using more general unstructured grids using many of the concepts and numerical approaches available in MODFLOW-USG \citep{modflowusg}. MODFLOW 6 also includes advanced formulations to simulate three-dimensional anisotropy and dispersion \citep{modflow6xt3d}, coupled variable-density groundwater flow and transport \citep{langevin2020hydraulic}, and a water mover package to represent natural and managed hydrologic connections \citep{morway2021use}.
+MODFLOW 6 currently includes the Groundwater Flow (GWF) Model and the Groundwater Transport (GWT) Model each with packages to represent surface water processes, groundwater extraction, external boundaries, mass sources and sinks, and mass sorption and reactions. GWF and GWT models can be developed using structured model grids consisting of layers, rows, and columns or they can be developed using more general unstructured grids using many of the concepts and numerical approaches available in MODFLOW-USG \citep{modflowusg}. MODFLOW 6 also includes advanced formulations to simulate three-dimensional anisotropy and dispersion \citep{modflow6xt3d}, coupled variable-density groundwater flow and transport \citep{langevin2020hydraulic}, and a water mover package to represent natural and managed hydrologic connections \citep{morway2021use}.
 
 Development and testing of the MODFLOW 6 program relies heavily on tight integration with FloPy. A key component of this tight integration is the capability to quickly support new MODFLOW 6 models and packages with FloPy. Unlike the FloPy support for previous MODFLOW versions (\textit{e.g.}, MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, and SEAWAT), the FloPy Python classes for MODFLOW 6 are dynamically generated from simple text files, called ``definition files,'' that describe the input file structure. All MODFLOW 6 model input files are described using these definition files. This allows MODFLOW 6 developers to write tests for new models, packages, and functionality as they are developed. These definition files are used to programmatically generate the user input and output guide for MODFLOW 6. These same definition files are also used to generate FloPy classes, with documentation corresponding to input variable descriptions in the input and output guide. New functionality can be added by users to existing packages by modifying existing definition files using instructions provided in the \href{https://github.com/MODFLOW-USGS/modflow6/tree/develop/doc/mf6io/mf6ivar}{MODFLOW 6 GitHub repository}. The existing definition files can also be used as a template for creating classes for new MODFLOW 6 models or packages.
 
@@ -163,90 +163,87 @@ get-modflow :flopy
 
 \subsection*{Managing and Creating Model Grids}
 
-FloPy was originally developed to support models that are based on a regular grid consisting of layers, rows, and columns. Recent support for unstructured grids in MODFLOW \citep{modflowusg, modflow6gwf} required revisions to the underlying approach for managing spatial discretization information in FloPy. Grid information is containerized into a single location and used throughout FloPy modeling tasks for geospatial processing, plotting, and exporting. Spatial discretization is now handled in FloPy through dedicated model grid classes. There is a \texttt{Grid} class, which serves as the base class for the \texttt{StructuredGrid}, \texttt{VertexGrid}, and \texttt{UnstructuredGrid} classes. Grid objects can be created by the user for preprocessing, and they are automatically generated and attached to a FloPy model object.
+FloPy was originally developed to support models that are based on a structured grid consisting of layers, rows, and columns. Recent support for unstructured grids in MODFLOW \citep{modflowusg, modflow6gwf} required revisions to the underlying approach for managing spatial discretization information in FloPy. Grid information is containerized into a single location and used throughout FloPy modeling tasks for geospatial processing, plotting, and exporting. Spatial discretization is now handled in FloPy through dedicated model grid classes. There is a \texttt{Grid} class, which serves as the base class for the \texttt{StructuredGrid}, \texttt{VertexGrid}, and \texttt{UnstructuredGrid} classes. Grid objects can be created by the user for preprocessing, and they are automatically generated and attached to a FloPy model object.
 
-Regular MODFLOW grids can have constant row and column spacings, as shown in Figure \ref{fig:grids}A, or they can have variable row and column spacings to focus resolution around an area of interest, as shown in Figure \ref{fig:grids}B. The following Python code shows how to create a \texttt{StructuredGrid} object in FloPy. A \texttt{StructuredGrid} object can also be created from discretization data required when instantiating a MODFLOW 6 \texttt{DIS} object using \texttt{flopy.mf6.ModflowGwfdis()}. 
+Structured MODFLOW grids can have constant row and column spacings, as shown in Figure \ref{fig:grids}A, or they can have variable row and column spacings to focus resolution around an area of interest, as shown in Figure \ref{fig:grids}B. The following Python code shows how to create a \texttt{StructuredGrid} object in FloPy. A \texttt{StructuredGrid} object can also be created from discretization data required when instantiating a MODFLOW 6 \texttt{DIS} object using \texttt{flopy.mf6.ModflowGwfdis()}. 
 
 \begin{python}
->>> regular_grid = flopy.discretization.StructuredGrid(nlay=nlay, 
+>>> structured_grid = flopy.discretization.StructuredGrid(nlay=nlay, 
 ... delr=delr, delc=delc, xoff=0.0, yoff=0.0, angrot=0.0, top=top, botm=botm)
 \end{python}
 
 
 \begin{figure}[ht!]
 	\begin{center}
-		\includegraphics{figures/grids_geoprocessing.png}
+		\includegraphics{figures/grids_geoprocessing.pdf}
 	\end{center}
-	\caption{Examples of grids that can be generated and processed using FloPy for a hypothetical watershed, including (A) a regular MODFLOW grid with constant and equal row and column spacings, (B) a regular MODFLOW grid with variable row and column spacings, (C) a regular MODFLOW child grid nested within a regular MODFLOW parent grid, (D) a quadtree grid generated with the GRIDGEN program \citep{gridgen} through the FloPy wrapper, (D) a triangular grid generated with the Triangle program \citep{trianglemesh} through the FloPy wrapper, and (E) a Voronoi grid created from the triangular mesh. All of the grids have refinement in the location of the child grid in (C).}
+	\caption{Examples of grids that can be generated and processed using FloPy for a hypothetical watershed, including (A) a structured MODFLOW grid with constant and equal row and column spacings, (B) a structured MODFLOW grid with variable row and column spacings, (C) a structured MODFLOW child grid nested within a structured MODFLOW parent grid, (D) a quadtree grid generated with the GRIDGEN program \citep{gridgen} through the FloPy wrapper, (D) a triangular grid generated with the Triangle program \citep{trianglemesh} through the FloPy wrapper, and (E) a Voronoi grid created from the triangular mesh. All of the grids have refinement in the location of the child grid in (C).}
 	\label{fig:grids}
 \end{figure}
 
 
-MODFLOW 6 was developed to natively support multi-model simulations \citep{modflow6framework}. One form of multi-model simulation is a nested grid application in which a more finely discretized child model is embedded within a more coarsely discretized parent model \citep{modflowlgr, vilhelmsen2012evaluation, modflowlgr2}. The use of a locally refined grid (LGR) within an encompassing parent grid offers computational benefits in that the additional refinement is targeted to an area of interest. FloPy provides a \texttt{Lgr()} utility class for constructing the data required to tightly couple parent and child models within a single MODFLOW 6 simulation. Figure \ref{fig:grids}C shows two \texttt{StructuredGrid} objects---one object represents the parent model grid and the other represents the nested child grid. The \texttt{Lgr()} utility class defines the connection properties between cells in the parent model and cells in the child model. Connection properties consist of distances, areas, and other geometric information needed to calculate flow between cells in different models. The \texttt{Lgr()} utility class is general in that the child model can have more layers than the parent model. The following Python code shows the steps for creating the a child \texttt{StructuredGrid} object grid using data for the parent grid with the \texttt{Lgr()} utility class.
+MODFLOW 6 was developed to natively support multi-model simulations \citep{modflow6framework}. One form of multi-model simulation is a nested grid application in which a more finely discretized child model is embedded within a more coarsely discretized parent model \citep{modflowlgr, vilhelmsen2012evaluation, modflowlgr2, fienen2022simulation}. The use of a locally refined grid (LGR) within an encompassing parent grid offers computational benefits in that the additional refinement is targeted to an area of interest. FloPy provides a \texttt{Lgr()} utility class for constructing the data required to tightly couple parent and child models within a single MODFLOW 6 simulation. Figure \ref{fig:grids}C shows two \texttt{StructuredGrid} objects---one object represents the parent model grid and the other represents the nested child grid. The \texttt{Lgr()} utility class defines the connection properties between cells in the parent model and cells in the child model. Connection properties consist of distances, areas, and other geometric information needed to calculate flow between cells in different models. The \texttt{Lgr()} utility class is general in that the child model can have more layers than the parent model. The following Python code shows the steps for creating the a child \texttt{StructuredGrid} object grid using data for the parent grid with the \texttt{Lgr()} utility class.
 
 \begin{python}
->>> idomain_parent = np.ones((nlay_parent, nrow_parent, ncol_parent), 
-... dtype=int)
-...
->>> idomain_parent[0, 8:12, 13:18] = 0
->>> ncpp, ncppl = 3, [1]
->>> lgr = Lgr(nlayparent, nrow_parent, ncol_parent,
-... delr_parent, delc_parent, topparent, botmparent,
-... idomain_parent, ncpp=ncpp, ncppl=ncppl, xllp=0.0, yllp=0.0)
-...
->>> delr, delc = lgr.get_delr_delc()
->>> xoff, yoff = lgr.get_lower_left()
->>> regular_gridchild = StructuredGrid(
-... delr=delr, delc=delc, xoff=xoff, yoff=yoff)
-...
+idomain_parent = np.ones((nlay_parent, nrow_parent, ncol_parent), dtype=int)
+idomain_parent[0, 8:12, 13:18] = 0
+ncpp, ncppl = 3, [1]
+lgr = Lgr(nlay_parent, nrow_parent, ncol_parent,
+          delr_parent, delc_parent, topparent, botmparent,
+          idomain_parent, ncpp=ncpp, ncppl=ncppl, 
+          xllp=0.0, yllp=0.0)
+delr, delc = lgr.get_delr_delc()
+xoff, yoff = lgr.get_lower_left()
+structured_gridchild = StructuredGrid(delr=delr, delc=delc,
+                                      xoff=xoff, yoff=yoff)
 \end{python}
 
 \noindent The child grid is created in the inactive area of the parent grid (\texttt{idomain\_parent}) and the returned \texttt{lgr} object contains all of the information required to create a child \texttt{StructuredGrid} object. The connection properties needed to create the MODFLOW 6 Exchange input file for the parent and child grids can be retrieved using \texttt{lgr.get\_exchange\_data()}.
 
 FloPy supports management and generation of unstructured grids. Unstructured grids are represented as layered or fully unstructured. A layered grid is one in which the same grid applies to all model layers. An unstructured grid is more general and allows the model grid to change with depth. Layered grids and unstructured grids are stored in FloPy as \texttt{VertexGrid} and \texttt{UnstructuredGrid} objects, respectively.
 
-Layered quadtree grids can be created using the \texttt{Gridgen()} utility class, which is a wrapper around the GRIDGEN program \citep{gridgen}. GRIDGEN starts with a regular MODFLOW grid defined by the user. The program then recursively subdivides individual cells that intersect with refinement features into quarters until a maximum level of refinement is met. Refinement features may be points, lines, or polygons. Smoothing is automatically handled so that a cell is connected to no more than two cells in any primary horizontal direction and four cells in the vertical direction. Figure \ref{fig:grids}D shows an example of a quadtree grid created with GRIDGEN in which a base grid is refined two levels along streams and in the child grid area shown in Figure \ref{fig:grids}C. The following Python code shows the steps for creating the quadtree grid with GRIDGEN.
+Layered quadtree grids can be created using the \texttt{Gridgen()} utility class, which is a wrapper around the GRIDGEN program \citep{gridgen}. GRIDGEN starts with a structured MODFLOW grid with constant and equal row and column spacing defined by the user. The program then recursively subdivides individual cells that intersect with refinement features into quarters until a maximum level of refinement is met. Refinement features may be points, lines, or polygons. Smoothing is automatically handled so that a cell is connected to no more than two cells in any primary horizontal direction and four cells in the vertical direction. Figure \ref{fig:grids}D shows an example of a quadtree grid created with GRIDGEN in which a base grid is refined two levels along streams and in the child grid area shown in Figure \ref{fig:grids}C. The following Python code shows the steps for creating the quadtree grid with GRIDGEN.
 
 \begin{python}
->>> sim = flopy.mf6.MFSimulation()
->>> gwf = flopy.mf6.ModflowGwf(sim)
->>> dis6 = flopy.mf6.ModflowGwfdis(gwf, nrow=nrow, ncol=ncol, delr=dy, delc=dx)
->>> g = Gridgen(dis6, model_ws=temp_path)
->>> g.add_refinement_features([[lgr_polygon_xy]], "polygon", 2, range(1))
->>> g.add_refinement_features(stream_points, "line", 2, range(1))
->>> g.build(verbose=False)
->>> gridprops_vg = g.get_gridprops_vertexgrid()
->>> quadtree_grid = flopy.discretization.VertexGrid(**gridprops_vg)
+sim = flopy.mf6.MFSimulation()
+gwf = flopy.mf6.ModflowGwf(sim)
+dis6 = flopy.mf6.ModflowGwfdis(gwf, nrow=nrow, ncol=ncol, delr=dy, delc=dx)
+g = Gridgen(dis6, model_ws=temp_path)
+g.add_refinement_features([[lgr_polygon_xy]], "polygon", 2, range(1))
+g.add_refinement_features(stream_points, "line", 2, range(1))
+g.build(verbose=False)
+gridprops_vg = g.get_gridprops_vertexgrid()
+quadtree_grid = flopy.discretization.VertexGrid(**gridprops_vg)
 \end{python}
 
 FloPy also provides a wrapper utility for the Triangle mesh generation program \citep{trianglemesh}. The \texttt{Triangle()} utility class writes the Triangle program input file, runs the Triangle program, and then loads the triangular mesh. Users provide the maximum area for individual triangles, angle constraints, a polygon describing the model domain, and so forth. Figure \ref{fig:grids}E shows an example of a triangular grid created with the Triangle program. The Python code for creating the triangular grid is shown below.
 
 \begin{python}
->>> tri = flopy.utils.triangle.Triangle(maximum_area=maximum_area, 
-... angle=30, nodes=nodes, model_ws=temp_path)
-...
->>> tri.add_polygon(boundary_points)
->>> tri.build(verbose=False)
->>> cell2d = tri.get_cell2d()
->>> vertices = tri.get_vertices()
->>> triangular_grid = VertexGrid(vertices=vertices, cell2d=cell2d, 
-... idomain=idomain, nlay=nlay, ncpl=tri.ncpl, top=top, botm=botm)
-...
+tri = flopy.utils.triangle.Triangle(maximum_area=maximum_area, 
+                                    angle=30, nodes=refinement_verts,
+                                    model_ws=temp_path)
+tri.add_polygon(boundary_points)
+tri.build(verbose=False)
+cell2d = tri.get_cell2d()
+vertices = tri.get_vertices()
+triangular_grid = VertexGrid(vertices=vertices, cell2d=cell2d, 
+                             idomain=idomain, nlay=nlay, ncpl=tri.ncpl, 
+                             top=top, botm=botm)
 \end{python}
 
-\noindent \texttt{nodes} in the triangular grid code shown above contains the user-specified stream vertices and the horizontal cell vertices for the child model shown in Figure \ref{fig:grids}C. 
+\noindent \texttt{refinement\_verts} in the triangular grid code shown above contains the user-specified stream vertices and the horizontal cell vertices for the child model shown in Figure \ref{fig:grids}C. 
 
 A triangular grid can be converted by FloPy into a Voronoi grid using the \texttt{VoronoiGrid()} utility class. The \texttt{VoronoiGrid()} utility class uses SciPy routines \citep{2020SciPy-NMeth} to construct Voronoi polygons around each vertex in the triangular mesh. Figure \ref{fig:grids}F shows an example of a Voronoi grid created from the triangular mesh shown in Figure \ref{fig:grids}D. The steps for creating the Voronoi grid from the previously created \texttt{Triangle()} object (\texttt{tri}) are shown below.
 
 \begin{python}
->>> vor = flopy.utils.voronoi.VoronoiGrid(tri)
->>> gridprops = vor.get_gridprops_vertexgrid()
->>> voronoi_grid = VertexGrid(**gridprops, nlay=nlay, idomain=idomain)
+vor = flopy.utils.voronoi.VoronoiGrid(tri)
+gridprops = vor.get_gridprops_vertexgrid()
+voronoi_grid = VertexGrid(**gridprops, nlay=nlay, idomain=idomain)
 \end{python}
 
-The \texttt{StructuredGrid}, \texttt{VertexGrid}, and \texttt{UnstructuredGrid} classes have useful properties and methods for accessing or mapping locations on the model grid including: (1) converting x, y pairs from local to global coordinates (\texttt{.get\_coords()}) and from global to local coordinates (\texttt{.get\_local\_coords()}); (2) getting x, y, and z coordinates for cell centers (\texttt{.xcellcenters}, \texttt{.ycellcenters}, \texttt{.zcellcenters}, and \texttt{.xyzcellcenters}) and vertices (\texttt{.xvertices}, \texttt{.yvertices}, \texttt{.zvertices}, and \texttt{.xyzvertices}); and (3) intersecting a list of x, y pairs with the grid and returning the appropriate \texttt{cellid} (\texttt{.intersect()}). Other useful grid class properties and methods include generating a grid object from a MODFLOW 6 binary grid file (\texttt{.from\_binary\_grid\_file()}), retrieving cell thicknesses (\texttt{.thick}), and calculating the saturated thickness for each cell by passing a head array with dimensions consistent with the grid object (\texttt{.saturated\_thick(head)}).
+The \texttt{StructuredGrid}, \texttt{VertexGrid}, and \texttt{UnstructuredGrid} classes have useful properties and methods for accessing or mapping locations on the model grid including: (1) converting x, y pairs from local to global coordinates (\texttt{.get\_coords()}) and from global to local coordinates (\texttt{.get\_local\_coords()}); (2) getting x, y, and z coordinates for cell centers (\texttt{.xcellcenters}, \texttt{.ycellcenters}, \texttt{.zcellcenters}, and \texttt{.xyzcellcenters}) and vertices (\texttt{.xvertices}, \texttt{.yvertices}, \texttt{.zvertices}, and \texttt{.xyzvertices}); and (3) intersecting a list of x, y pairs with the grid and returning the appropriate \texttt{cellid} (\texttt{.intersect()}). Local coordinates are model-based coordinates and global coordinates are coordinates generated after transforming local model coordinates using user-specified x-offset, y-offset, and rotation angle values; global coordinates are equal to local coordinates if the x-offset, y-offset, and rotation angle are all zero. Other useful grid class properties and methods include generating a grid object from a MODFLOW 6 binary grid file (\texttt{.from\_binary\_grid\_file()}), retrieving cell thicknesses (\texttt{.cell\_thickness}), and calculating the saturated thickness for each cell by passing a head array with dimensions consistent with the grid object (\texttt{.saturated\_thickness(head)}).
 
-The new FloPy capabilities for generating and testing different types of model grids allows for innovation in the way a study area is discretized. For example, \cite{Moussa2018} used a Voronoi grid to add additional resolution in the vicinity of irrigation wells in the Frenchman Creek Basin in Nebraska, USA to quantify the effects of land-use change and irrigation on streamflow depletion. Furthermore, the ability to develop multi-model simulations using FloPy allows higher-resolution inset models to be added in focused areas. \cite{fienen2022simulation} used focused inset models tightly coupled with a coarse regional model to better represent lakes and quantify lake/groundwater interactions in the Central Sands region in Wisconsin, USA. The inset groundwater flow models with lakes \citep{fienen2022simulation} were developed using \texttt{modflow-setup} \citep{leaf2022modflow}, which relies on FloPy to generate MODFLOW 6 datasets.
+The new FloPy capabilities for generating and testing different types of model grids allows for innovation in the way a study area is discretized. For example, \cite{Moussa2018} used a Voronoi grid to add additional resolution in the vicinity of irrigation wells in the Frenchman Creek Basin in Nebraska, USA to quantify the effects of land-use change and irrigation on streamflow depletion. Furthermore, the ability to develop multi-model simulations using FloPy allows higher-resolution inset models to be added in focused areas. \cite{fienen2022simulation} used local grid refinement models tightly coupled to inset models that were in turn loosely coupled to a coarse regional model, to better represent lakes and quantify the effects of distant pumping on lake/groundwater interactions in the Central Sands region in Wisconsin, USA. The inset groundwater flow models with lakes \citep{fienen2022simulation} were developed using \texttt{modflow-setup} \citep{leaf2022modflow}, which relies on FloPy to generate MODFLOW 6 datasets.
 
 \subsection*{Geospatial Processing}
 
@@ -255,13 +252,12 @@ Geospatial processing is often a fundamental part of creating a groundwater mode
 A common geospatial processing task is resampling of raster data onto a model grid. For example, it is often necessary as part of model construction to resample a raster data set of land surface elevation onto a model grid. FloPy includes a new raster sampling utility based on the Rasterio Python package \citep{gillies_2019}. The following Python code demonstrates the steps for resampling an Esri ASCII raster format grid onto a Voronoi grid.
 
 \begin{python}
->>> fine_topo = flopy.utils.Raster.load("./grid_data/fine_topo.asc")
->>> top_vg = fine_topo.resample_to_grid(voronoi_grid, band=fine_topo.bands[0],
-... method="linear", extrapolate_edges=True)
-...
+fine_topo = flopy.utils.Raster.load("./grid_data/fine_topo.asc")
+top_vg = fine_topo.resample_to_grid(voronoi_grid, band=fine_topo.bands[0],
+                                    method="linear", extrapolate_edges=True)
 \end{python}
 
-\noindent The result of raster resampling is a numpy array, equal in size to the number of cells in one layer of the Voronoi grid. The numpy array contains an interpolated land surface elevation for each model cell. In this Python code example, the land surface grid was interpolated to the Voronoi grid using a ``linear'' method, however, the method also supports other options (nearest, cubic, mean, median, mode, min, and max) for geostatistical resampling. The color floods of elevation in Figure \ref{fig:grids} show the results of linear raster resampling for land surface onto a variety of structured and unstructured model grids.
+\noindent The result of raster resampling is a numpy array, equal in size to the number of cells in one layer of the Voronoi grid. The numpy array contains an interpolated land surface elevation for each model cell. In this Python code example, the land surface grid was interpolated to the Voronoi grid using a ``linear'' method, however, the method also supports ``nearest'', ``cubic'' and other options (``mean'', ``median'', ``mode'', ``min'', and ``max'') available in the rasterstats Python package \citep{perry2013} for geostatistical resampling. The color floods of elevation in Figure \ref{fig:grids} show the results of linear raster resampling for land surface onto a variety of structured and unstructured model grids.
 
 Performing intersections of hydrologic features with the model grid is another common modeling task. FloPy is now equipped with robust and efficient capabilities for intersecting a model grid with points, lines, and polygons. The underlying intersection routines rely on the Shapely Python package \citep{shapely-gillies} to determine intersection properties. When a point or collection of points is intersected with a model grid, the grid intersection routine returns the cells that intersect with the points. When a line or collection of lines is intersected with a model grid, the grid intersection routine returns the cells that intersect with the lines and the lengths of lines within each intersected cell. The line and grid intersection routine also creates and returns individual line segments of the line features within each intersected cell. When a polygon or collection of polygons is intersected with a model grid, the grid intersection routine returns the cells that intersect with the polygons and the polygon area within the cell. The polygon and grid intersection routine also creates and returns individual polygons of the original polygon features within each intersected intersected cell.
 
@@ -269,28 +265,27 @@ The following Python code demonstrates the steps for identifying the grid cells 
 
 % something seems funky with this code example. The grid intersect routine should be able to do this all in one step.
 \begin{python}
->>> ixs = flopy.utils.GridIntersect(voronoi_grid)
->>> results = []
->>> for points in segments:
-...  segment = ixs.intersect(LineString(points))
-...  results.extend(segment["cellids"].tolist())
-...
+ixs = flopy.utils.GridIntersect(voronoi_grid)
+results = []
+for points in segments:
+    segment = ixs.intersect(LineString(points))
+    results.extend(segment["cellids"].tolist())
 \end{python}
 
 \noindent The result of this code snippet (\texttt{results}) is a list of Voronoi grid cell numbers that intersect with the line segments. The \texttt{ixs.intersect()} method also returns the \texttt{"lengths"} of the shapelike collection intersecting each cell, the \texttt{"vertices"} corresponding to each cell that intersects a collection of shapelike objects, and a shapely object (\texttt{"ixshape"}) for each portion of the original shape (\texttt{LineString(points)}) that intersects a cell. Results of the grid intersection for a linear stream network and the six different model grids is shown in Figure \ref{fig:intersections}.
 
 \begin{figure}[ht!]
 	\begin{center}
-		\includegraphics{figures/grids_intersection.png}
+		\includegraphics{figures/grids_intersection.pdf}
 	\end{center}
-	\caption{Examples of the intersection of a linear stream network with the model grids shown in Figure~\ref{fig:grids}. Intersections were performed using FloPy for (A) a regular MODFLOW grid, (B) a regular MODFLOW grid with variable row and column spacing, (C) a regular MODFLOW child grid nested within a regular MODFLOW parent grid, (D) a quadtree grid, (D) a triangular grid, and (E) a Voronoi grid. Shaded cells represent those cells that intersect with the linear stream network. Individual plots in this figure are centered on the location of the child grid shown in Figure~\ref{fig:grids}C.}
+	\caption{Examples of the intersection of a linear stream network with the model grids shown in Figure~\ref{fig:grids}. Intersections were performed using FloPy for (A) a structured MODFLOW grid, (B) a structured MODFLOW grid with variable row and column spacing, (C) a structured MODFLOW child grid nested within a structured MODFLOW parent grid, (D) a quadtree grid, (D) a triangular grid, and (E) a Voronoi grid. Shaded cells represent those cells that intersect with the linear stream network. Individual plots in this figure are centered on the location of the child grid shown in Figure~\ref{fig:grids}C.}
 	\label{fig:intersections}
 \end{figure}
 
 
 \subsection*{Processing MODFLOW 6 output}
 
-MODFLOW 6 has many different types of output that can be created during a simulation. A GWF Model, for example, can write simulated heads and detailed budget information to binary files. Global model budgets are written to standard MODFLOW listing (\texttt{*.lst}) files and can be written to comma-separated value text files. Some individual GWF and GWT Model advanced stress packages can also write simulated output during a simulation. For example, the Lake (LAK) Package can write simulated lake stages and detailed lake budget information to binary files. Likewise, the Multi-Aquifer Well (MAW) Package can write simulated well head and well budgets to binary files. Recent improvements have been made to FloPy to allow users easier access to simulation results using \texttt{.output} routines available for MODFLOW 6 models and advanced stress packages. Prior to these improvements, users were required to instantiate head, concentration, and budget file readers using file paths and names in order to access this information. With the \texttt{.output} routines, the file readers are automatically generated when called by the user.
+MODFLOW 6 has many different types of output that can be created during a simulation. A GWF Model, for example, can write simulated heads and detailed budget information to binary files. Global model budgets are written to standard MODFLOW listing (\texttt{*.lst}) files and can be written to comma-separated value text files. Some individual GWF and GWT Model advanced stress packages can also write simulated output during a simulation. Advanced packages are packages that solve their own continuity equation and include the Lake (LAK), StreamFlow Routing (SFR), Multi-Aquifer Well (MAW), Unsaturated Zone Flow (UZF), and Mover (MVR) packages. For example, the LAK Package can write simulated lake stages and detailed lake budget information to binary files. Likewise, the MAW Package can write simulated well head and well budgets to binary files. Recent improvements have been made to FloPy to allow users easier access to simulation results using \texttt{.output} routines available for MODFLOW 6 models and advanced stress packages. Prior to these improvements, users were required to instantiate head, concentration, and budget file readers using file paths and names in order to access this information. With the \texttt{.output} routines, the file readers are automatically generated when called by the user.
 
 The following \texttt{.methods()} syntax shows how a user can discover the type of output information that is available for the specified \texttt{gwf} model.
 
@@ -317,19 +312,19 @@ Similarly, the following \texttt{.methods()} syntax shows how a user can discove
 Simulated output for dependent variables are written by MODFLOW 6 to binary files. Simulated heads and concentrations written by the GWF and GWT models, respectively, can be accessed using the \texttt{.output} method on the FloPy \texttt{gwf} or \texttt{gwt} objects. To access the simulated head output, for example, a call can be made to the head file reader to retrieve data for a specified simulation time using the \texttt{.get\_data()} method as follows.
 
 \begin{python}
->>> head = gwf.output.head().get_data(totim=1.0)
+head = gwf.output.head().get_data(totim=1.0)
 \end{python}
 
 \noindent In this case, the \texttt{head} variable is retrieved for a user-specified simulation time (\texttt{totim=} and is a numpy array equal in size to the size of the model grid. Head data can also be accessed for a zero-based time step--stress period tuple
 
 \begin{python}
->>> head = gwf.output.head().get_data(kstpkper=(0,0))
+head = gwf.output.head().get_data(kstpkper=(0,0))
 \end{python}
 
 \noindent or a zero-based index
 
 \begin{python}
->>> head = gwf.output.head().get_data(idx=0)
+head = gwf.output.head().get_data(idx=0)
 \end{python}
 
 \subsubsection*{Processing simulated cell-by-cell budget results}
@@ -354,14 +349,14 @@ LAK                  6
 \noindent The \texttt{IMETH} code indicates if the data is stored in the file as an array (\texttt{IMETH=1}) or if it is list based (\texttt{IMETH=6}). Cell-by-cell specific-discharge data can be extracted using
 
 \begin{python}
->>> spdis = gwf.output.budget().get_data(totim=1.0, text="DATA-SPDIS")[0]
+spdis = gwf.output.budget().get_data(totim=1.0, text="DATA-SPDIS")[0]
 \end{python}
 
 \noindent Simulated values for specific discharge for each cell are returned as a list containing a numpy record array for the user-specified simulation time (\texttt{totim=}). Like MODFLOW head data, all of the data in the cell-by-cell data file for a user-specified simulation time (\texttt{totim=}), zero-based time step and stress period tuple (\texttt{kstpkper=}), or zero-based index (\texttt{idx=}) can also be extracted. Simulated specific discharge information can be processed into a form that can be plotted with FloPy using 
 
 \begin{python}
->>> qx, qy, qz = flopy.utils.postprocessing.get_specific_discharge(spdis, gwf, 
-... head=head)
+qx, qy, qz = flopy.utils.postprocessing.get_specific_discharge(spdis, gwf, 
+                                                               head=head)
 \end{python}
 
 \noindent The optional argument \texttt{head=} above sets the specific discharge in inactive or dry cells to NaN. 
@@ -384,14 +379,14 @@ LAK                  6
 FloPy plotting capabilities have been refined and updated to support plotting both structured and unstructured models in map and cross-section view using the \texttt{.PlotMapView()} and \texttt{.PlotCrossSection()} classes, respectively. The plotting methods are wrappers around the matplotlib plotting methods \citep{hunter2007matplotlib} and allow fine-grained control using matplotlib keyword arguments (\texttt{kwargs}). The following Python code demonstrates the steps for plotting a map of simulated heads, the model grid, the location of drain (DRN) package cells, specific-discharge vectors, and head contours for the \texttt{gwf} model.
 
 \begin{python}
->>> mm = flopy.plot.PlotMapView(model=gwf)
->>> mm.plot_array(head, edgecolor="0.5")
->>> mm.plot_bc("DRN")
->>> mm.plot_grid()
->>> cs = mm.contour_array(head)
->>> mm.ax.clabel(cs)
->>> mm.plot_vector(qx, qy, normalize=True)
->>> plt.show()
+mm = flopy.plot.PlotMapView(model=gwf)
+mm.plot_array(head, edgecolor="0.5")
+mm.plot_bc("DRN")
+mm.plot_grid()
+cs = mm.contour_array(head)
+mm.ax.clabel(cs)
+mm.plot_vector(qx, qy, normalize=True)
+plt.show()
 \end{python}
 
 \noindent Figure~\ref{fig:flopyplots}A shows the outcome of the Python code demonstrated above with additional geographic features and fine-grained control of grid lines, text, annotations, tick locations, and axis labels. Results shown in Figure~\ref{fig:flopyplots} are for a steady-state model discretized into three convertible layers, with isotropic hydraulic properties, a hydraulic conductivity of 1 m/d, with rivers represented as drain cells, with drains located on the top of the model in layer 1, and with an areal recharge rate of 0.000001 m/d. Figure~\ref{fig:flopyplots}B shows use of the \texttt{.plot\_array()} method to create a map of the layer containing the water table, drain cells where the groundwater is discharging to a river, and cells where groundwater is discharging to the surface.
@@ -399,19 +394,18 @@ FloPy plotting capabilities have been refined and updated to support plotting bo
 The following Python code demonstrates the steps for plotting a cross section of simulated heads and the model grid for the \texttt{gwf} model along an arbitrary line defined using a list of x, y coordinate pairs (tuples) defining the vertices of the line. For structured grids, cross sections can also be specified along a row or column.
 
 \begin{python}
->>> fx = flopy.plot.PlotCrossSection(model=gwf, 
-... line={"line": [(0, 42500), (186801, 42500)]})
-...
->>> fx.plot_array(head, head=head)
->>> fx.plot_grid()
->>> plt.show()
+fx = flopy.plot.PlotCrossSection(model=gwf, 
+                                 line={"line": [(0, 42500), (186801, 42500)]})
+fx.plot_array(head, head=head)
+fx.plot_grid()
+plt.show()
 \end{python}
 
 \noindent The \texttt{head=} keyword option for the \texttt{plot\_array()} method above causes the plotting routine to draw and fill only the the saturated part of the model cell (determined using the simulated head and cell information). Without the \texttt{head=} keyword option, the entire cell from top to bottom would be color filled based on the head value. Figure~\ref{fig:flopyplots}C and D show the outcome of the Python code demonstrated along cross-section lines A--A' and B--B' (shown in Figure~\ref{fig:flopyplots}A) above with fine-grained control of grid lines, text, annotations, tick locations, and axis labels. Note that the color flood of head in Figure~\ref{fig:flopyplots}C and D shows that unconfined conditions occur in higher elevation cells or cells adjacent to river cells.
 
 \begin{figure}[ht!]
 	\begin{center}
-		\includegraphics{figures/grids_flopy_plots.png}
+		\includegraphics{figures/grids_flopy_plots.pdf}
 	\end{center}
 	\caption{Examples of FloPy map and cross-section plotting capabilities for a model discretized using a Voronoi grid (Figure~\ref{fig:grids}F). (A) Map showing simulated heads and specific-discharge vectors in the upper-most saturated cells. (B) Map showing the layer containing the water table, the location of cells where the aquifer is discharged to rivers represented as drain cells, and the location of cells where groundwater is discharging to the land surface. (C) East-West cross-section along line A--A', shown on Figure~\ref{fig:flopyplots}A, showing the model grid, simulated heads, and cells where water-table conditions exist. (D) North-South cross-section along line B--B', shown on Figure~\ref{fig:flopyplots}A, showing the model grid, simulated heads, and cells where water-table conditions exist.}
 	\label{fig:flopyplots}
@@ -424,9 +418,8 @@ Model input and output can be exported in a variety of standard formats using th
 The following Python code demonstrates the steps for exporting the \texttt{gwf} model as a VTK dataset with flat cell tops and bottoms (stair-case representation).
 
 \begin{python}
->>> gwf.export("temp_vtk/vtk_staircase", fmt='vtk', smooth=False,
-... vertical_exageration=500.0, pvd=True)
-...
+gwf.export("temp_vtk/vtk_staircase", fmt='vtk', smooth=False,
+           vertical_exageration=500.0, pvd=True)
 \end{python}
 
 \noindent VTK models can also be exported with smooth cell tops and bottoms using elevations interpolated to the cell vertices (\texttt{smooth=True}). Other supported export formats can be created by specifying the file extension to be \texttt{.shp} for shapefiles, \texttt{.nc} for NetCDF files, or if the \texttt{fmt} keyword is \texttt{vtk} (as shown above) for VTK files. Figure~\ref{fig:flopyvtk} shows stair-case and smooth VTK exports of the model described in the~\nameref{sec:plotting} section and rendered with Paraview \citep{ahrens2005paraview}.
@@ -449,7 +442,7 @@ In this section, FloPy is used to construct, run, and post process a MODFLOW 6 m
 
 \begin{figure}[ht!]
 	\begin{center}
-		\includegraphics{figures/mv_voronoi_river_discretization.png}
+		\includegraphics{figures/mv_voronoi_river_discretization.pdf}
 	\end{center}
 	\caption{Synthetic Valley model used to demonstrate the MODFLOW 6 capabilities of FloPy. (A) Map showing the Voronoi grid used to discretized the model domain and the location of Blue Lake, Straight River, and the areal extent of the confining unit separating the upper and lower aquifer units. (B) Map showing model cells intersecting the northern end of Straight River. (C) Map showing model cells intersecting the southern end of Straight River. The cell centroid and cell numbers in the inset areas at the northern and southern end of Straight River are also shown on (B) and (C).}
 	\label{fig:mvgrid}
@@ -465,7 +458,7 @@ The bottom of the model (layer 6) is based on \cite{hill1998} and the bottom of 
 
 \begin{figure}[ht!]
 	\begin{center}
-		\includegraphics{figures/mv_voronoi_map.png}
+		\includegraphics{figures/mv_voronoi_map.pdf}
 	\end{center}
 	\caption{Map showing Synthetic Valley model (A) topography and (B) simulated steady-state heads and specific discharge rates in model layer 1. Cross-section lines A--A' and B--B' shown in Figure~\ref{fig:mvxsection} are also shown on (A).}
 	\label{fig:mvmap}
@@ -473,7 +466,7 @@ The bottom of the model (layer 6) is based on \cite{hill1998} and the bottom of 
 
 \begin{figure}[ht!]
 	\begin{center}
-		\includegraphics{figures/mv_voronoi_xsection.png}
+		\includegraphics{figures/mv_voronoi_xsection.pdf}
 	\end{center}
 	\caption{Cross-section of Synthetic Valley model grid and simulated steady-state heads along cross-section line (A) A--A' and (B) B--B'. The simulated Blue Lake steady-state stage (3.46 m) and pumping well P-2 are also shown on (A).}
 	\label{fig:mvxsection}
@@ -491,7 +484,7 @@ Blue Lake was simulated as a lake on top of the model grid and only had vertical
 
 Drain (DRN) cells were specified in each cell in model layer 1 that was not connected to Blue Lake to prevent water levels from exceeding the top of the model. The conductance of each DRN cell was based on the horizontal cell area, a thickness of 0.3048 m, and a vertical hydraulic conductivity of 0.03048 m/d. Linear scaling of the drainage conductance was applied to improve model convergence and ranged from 0 m$^2$/d when groundwater levels were greater than or equal to 1 m below the top of the model to the specified conductance when groundwater water levels were greater than or equal to the top of the model.
 
-Areal specified recharge and potential evapotranspiration rates of 0.0025 and 0.0019 m/d were specified using the recharge (RCH) and evapotranspiration (EVT) packages, respectively. The EVT surface was specified to be the top of the model and the EVT extinction depth was specified to be 1 m.
+Uniform recharge and potential evapotranspiration rates were specified using the recharge (RCH) and evapotranspiration (EVT) packages, respectively, and are equal to the rates specified in the SFR and LAK packages (0.0025 and 0.0019 m/d). The EVT surface was specified to be the top of the model and the EVT extinction depth was specified to be 1 m.
 
 The location of pumping wells P1, P2, and P3 were determined using \texttt{GridIntersect().intersect()} FloPy functionality (Figure~\ref{fig:mvgrid}A). Pumping rates of -7,600, -7,600, and -1,900 m$^3$/d were specified for pumping wells P1, P2, and P3, respectively.
 
@@ -510,7 +503,7 @@ Simulated concentrations at the end of 30-years in all six model layers are show
 
 \begin{figure}[ht!]
 	\begin{center}
-		\includegraphics{figures/mv_voronoi_map_concentration.png}
+		\includegraphics{figures/mv_voronoi_map_concentration.pdf}
 	\end{center}
 	\caption{Maps showing Synthetic Valley simulated concentrations at the end of 30 years in model layer (A) 1, (B) 2, (C) 3, (D) 4, (E) 5, and (F) 6. The extent of the confining unit in model layer 3 is also shown on (C).}
 	\label{fig:mvconc}
@@ -522,7 +515,7 @@ FloPy is a popular Python package for building, running, and post processing gro
 \begin{itemize}
 \item FloPy supports the creation of many different types of groundwater models, including models that use MODFLOW 6, MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, MT3D, MT3D-USGS, and SEAWAT. FloPy support for MODFLOW 6 is based on an entirely new approach designed to automatically support all MODFLOW 6 models, packages, and options. The underlying FloPy classes for MODFLOW 6 are programmatically generated from the same input definition files that are used to construct the MODFLOW 6 user guide. This correspondence ensures that the FloPy classes are consistent and in-sync with MODFLOW 6 input.
 
-\item FloPy has been extended to support unstructured model grids in addition to regular grids defined by layers, rows, and columns. FloPy has several different routines for creating unstructured grids. FloPy includes a wrapper for the GRIDGEN program \citep{gridgen}, which can be used to create layered quadtree grids. FloPy also includes a wrapper for the Triangle program \citep{trianglemesh}, which can be used to create triangular meshes. A triangular mesh can be converted by FloPy into a Voronoi grid. Grid information is stored for each FloPy model created by the user. This model grid object is used systemically throughout FloPy for geospatial operations, plotting, and exporting model information to supported formats.
+\item FloPy has been extended to support unstructured model grids in addition to structured grids defined by layers, rows, and columns. FloPy has several different routines for creating unstructured grids. FloPy includes a wrapper for the GRIDGEN program \citep{gridgen}, which can be used to create layered quadtree grids. FloPy also includes a wrapper for the Triangle program \citep{trianglemesh}, which can be used to create triangular meshes. A triangular mesh can be converted by FloPy into a Voronoi grid. Grid information is stored for each FloPy model created by the user. This model grid object is used systemically throughout FloPy for geospatial operations, plotting, and exporting model information to supported formats.
 
 \item Geospatial intersections of points, lines, and polygons with model grids and raster resampling onto model grids are common steps in model construction. FloPy fully supports these geospatial operations through its grid intersection and raster resampling routines.
 
