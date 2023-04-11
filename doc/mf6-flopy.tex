@@ -149,11 +149,11 @@ Development and testing of the MODFLOW 6 program relies heavily on tight integra
 
 \section*{Common Modeling Tasks}
 
-The code snippets presented in this section that demonstrate how to create model grids, geoprocess data, process output, plot model data, and export model data are available as Jupyter notebooks \citep{Kluyver:2016aa} at the internet address indicated in the \nameref{sec:summary} section.
+The code snippets presented in this section demonstrate how to create model grids, geoprocess data, process output, plot model data, and export model data are available as Jupyter notebooks \citep{Kluyver:2016aa} at the internet address indicated in the \nameref{sec:summary} section.
 
 \subsection*{Getting MODFLOW and Other Related Executables}
 
-FloPy for MODFLOW 6 relies on a number of helper classes, which wrap functionality available in pre-compiled external executables, to generate unstructured models and calculate water budgets on user-defined zones. To facilitate getting these external executables, MODFLOW 6, and other MODFLOW-related programs (\textit{e.g.}, MODPATH, MT3DMS, MT3D-USGS, SEAWAT, etc.) can be installed using
+FloPy for MODFLOW 6 relies on a number of helper classes, which wrap functionality available in pre-compiled external utility programs, to generate unstructured models and calculate water budgets on user-defined zones. These external utility programs (\textit{e.g.}, GRIDGEN, Triangle, ZONEBUDGET, etc.), MODFLOW 6, and other MODFLOW-related programs (\textit{e.g.}, MODPATH, MT3DMS, MT3D-USGS, SEAWAT, etc.) can be installed using
 
 \begin{terminal}
 get-modflow :flopy
@@ -182,7 +182,7 @@ Structured MODFLOW grids can have constant row and column spacings, as shown in 
 \end{figure}
 
 
-MODFLOW 6 was developed to natively support multi-model simulations \citep{modflow6framework}. One form of multi-model simulation is a nested grid application in which a more finely discretized child model is embedded within a more coarsely discretized parent model \citep{modflowlgr, vilhelmsen2012evaluation, modflowlgr2, fienen2022simulation}. The use of a locally refined grid (LGR) within an encompassing parent grid offers computational benefits in that the additional refinement is targeted to an area of interest. FloPy provides a \texttt{Lgr()} utility class for constructing the data required to tightly couple parent and child models within a single MODFLOW 6 simulation. Figure \ref{fig:grids}C shows two \texttt{StructuredGrid} objects---one object represents the parent model grid and the other represents the nested child grid. The \texttt{Lgr()} utility class defines the connection properties between cells in the parent model and cells in the child model. Connection properties consist of distances, areas, and other geometric information needed to calculate flow between cells in different models. The \texttt{Lgr()} utility class is general in that the child model can have more layers than the parent model. The following Python code shows the steps for creating the a child \texttt{StructuredGrid} object grid using data for the parent grid with the \texttt{Lgr()} utility class.
+MODFLOW 6 was developed to natively support multi-model simulations \citep{modflow6framework}. One form of multi-model simulation is a nested grid application in which a more finely discretized child model is embedded within a more coarsely discretized parent model \citep{modflowlgr, vilhelmsen2012evaluation, modflowlgr2, fienen2022simulation}. The use of a locally refined grid (LGR) within an encompassing parent grid offers computational benefits in that the additional refinement is targeted to an area of interest. FloPy provides a \texttt{Lgr()} utility class for constructing the data required to tightly couple parent and child models within a single MODFLOW 6 simulation. Figure \ref{fig:grids}C shows two \texttt{StructuredGrid} objects---one object represents the parent model grid and the other represents the nested child grid. The \texttt{Lgr()} utility class defines the connection properties between cells in the parent model and cells in the child model. Connection properties consist of distances, areas, and other geometric information needed to calculate flow between cells in different models. The \texttt{Lgr()} utility class is general in that the child model can have more layers than the parent model. The following Python code shows the steps for creating a child \texttt{StructuredGrid} object using data for the parent grid with the \texttt{Lgr()} utility class.
 
 \begin{python}
 idomain_parent = np.ones((nlay_parent, nrow_parent, ncol_parent), dtype=int)
@@ -295,7 +295,7 @@ The following \texttt{.methods()} syntax shows how a user can discover the type 
 ['list()', 'zonebudget()', 'budget()', 'budgetcsv()', 'head()']
 \end{python}
 
-\noindent The \texttt{.list()} method can be used to get the incremental (\texttt{incremental=True}) or cumulative budget information from the MODFLOW listing file for the \texttt{gwf} model for a user-specified simulation time, zero-based time step and stress period tuple, or zero-based index. The \texttt{.zonebudget()} method allows the user to easily build a Zone Budget for MODFLOW 6 instance, run the Zone Budget program, and access Zone Budget output. The \texttt{.budget()} method gives user access to data in binary MODFLOW 6 cell-by-cell budget files. The \texttt{.budgetcsv()} method gives user access to cumulative and incremental global budget data saved to a comma separated values file. The \texttt{.head()} method gives user access to data in the binary MODFLOW 6 head file.
+\noindent The \texttt{.list()} method can be used to get the incremental (\texttt{incremental=True}) or cumulative budget information from the MODFLOW listing file for the \texttt{gwf} model for a user-specified simulation time, zero-based time step and stress period tuple, or zero-based index. The \texttt{.zonebudget()} method allows the user to easily build water and mass budgets for individual zones for MODFLOW 6 models, run the ZONEBUDGET program, and access ZONEBUDGET output. The \texttt{.budget()} method provides easy access to data in binary MODFLOW 6 cell-by-cell budget files. The \texttt{.budgetcsv()} method provides easy access to cumulative and incremental global budgets written by MODFLOW 6 to comma separated value files. The \texttt{.head()} method gives user access to data in the binary MODFLOW 6 head file.
 
 Similarly, the following \texttt{.methods()} syntax shows how a user can discover the type of output information that is available for an advanced stress package, such as the LAK package.
 
@@ -307,7 +307,7 @@ Similarly, the following \texttt{.methods()} syntax shows how a user can discove
 
 \noindent The \texttt{.package\_convergence()} method can be used to get the convergence information for an advanced stress package. The \texttt{.obs()} method can be used to get observation data saved for a model or stress package as a numpy record array or pandas data frame. The \texttt{.stage()} method provides access to the dependent variable calculated by the LAK package and behaves similarly to the \texttt{.head()} method for the \texttt{gwf} model. 
 
-\subsubsection*{Processing simulated dependent-variable data}
+\subsubsection*{Processing simulated dependent variables}
 
 Simulated output for dependent variables are written by MODFLOW 6 to binary files. Simulated heads and concentrations written by the GWF and GWT models, respectively, can be accessed using the \texttt{.output} method on the FloPy \texttt{gwf} or \texttt{gwt} objects. To access the simulated head output, for example, a call can be made to the head file reader to retrieve data for a specified simulation time using the \texttt{.get\_data()} method as follows.
 
@@ -327,7 +327,7 @@ head = gwf.output.head().get_data(kstpkper=(0,0))
 head = gwf.output.head().get_data(idx=0)
 \end{python}
 
-\subsubsection*{Processing simulated cell-by-cell budget results}
+\subsubsection*{Processing simulated cell-by-cell budgets}
 
 Similar to head output, cell-by-cell budget information can be accessed using FloPy. Unlike the simulated head file, the cell-by-cell budget file can have data for more than one item and these items may be stored in the file as arrays or lists of data. The data in the cell-by-cell budget file can be determined using
 
@@ -361,9 +361,9 @@ qx, qy, qz = flopy.utils.postprocessing.get_specific_discharge(spdis, gwf,
 
 \noindent The optional argument \texttt{head=} above sets the specific discharge in inactive or dry cells to NaN. 
 
-\subsubsection*{Performing zone budgets analyses}
+\subsubsection*{Performing zone budget analyses}
 
-\texttt{zonebudget()} output methods are available for both the \texttt{gwf} model and the \texttt{gwf.lak} advanced stress package examples shown above since they both solve a continuity equation. Other flow and transport advanced stress packages (\textit{e.g.}, SFR, Streamflow Transport (SFT), Unsaturated Zone Flow (UZF), Unsaturated Zone Transport (UZT), MAW, and Multi-Aquifer Well Transport (MWT)) also solve continuity equations and can be used with this Zone Budget functionality. The \texttt{zonebudget()} output method can be used to perform a Zone Budget analysis on the LAK advanced stress package using
+\texttt{zonebudget()} output methods are available for both the \texttt{gwf} model and the \texttt{gwf.lak} advanced stress package examples shown above since they both solve a continuity equation. Other flow and transport advanced stress packages (\textit{e.g.}, SFR, Streamflow Transport (SFT), Unsaturated Zone Flow (UZF), Unsaturated Zone Transport (UZT), MAW, and Multi-Aquifer Well Transport (MWT)) also solve continuity equations and can be used with this zone budget functionality. The \texttt{zonebudget()} output method can be used to perform a zone budget analysis on the LAK advanced stress package using
 
 \begin{python}
 >>> zonbud = gwf.lak.output.zonebudget(zarr)
@@ -372,7 +372,7 @@ qx, qy, qz = flopy.utils.postprocessing.get_specific_discharge(spdis, gwf,
 (True, [])
 \end{python}
 
-\noindent \texttt{zarr} in the \texttt{gwf.lak.output.zonebudget()} is a numpy array that defines an integer zone for each lake or group of lakes in the LAK advanced stress package. Zone Budget output can be returned as a numpy record array (\texttt{.get\_budget()} or \texttt{.get\_volumetric\_budget()}) or a Pandas dataframe (\texttt{.get\_dataframes()}).
+\noindent \texttt{zarr} in the \texttt{gwf.lak.output.zonebudget()} is a numpy array that defines an integer zone for each lake or group of lakes in the LAK advanced stress package. Zone budget output can be returned as a numpy record array (\texttt{.get\_budget()} or \texttt{.get\_volumetric\_budget()}) or a Pandas dataframe (\texttt{.get\_dataframes()}).
 
 \subsection*{Plotting} \label{sec:plotting}
 
@@ -413,7 +413,7 @@ plt.show()
 
 \subsection*{Exporting Grid Data to Other Formats}
 
-Model input and output can be exported in a variety of standard formats using the \texttt{.export()} method, which is available for FloPy model objects, package objects, binary dependent-variable (head, concentration, \textit{etc.}), and cell-by-cell output files. Standard output formats that are currently supported include shapefiles \citep{environmental1998esri}, NetCDF files \citep{rew2006netcdf, rew1990netcdf}, and Visualization Tool Kit (VTK) files \citep{schroeder:2006:VTK}. Entire models, packages, individual package arrays, binary dependent-variables (\textit{e.g.}, heads), or three-dimensional representations of binary cell-by-cell data can be exported. Shapefile and VTK output can be exported for all grid types but NetCDF files can currently only be exported for structured grids. The NetCDF output capability has been used to convert entire models and associated output so that it can be rendered in the GWWebFlow viewer \citep{gswebflow2018}.
+Model input and output can be exported in a variety of standard formats using the \texttt{.export()} method, which is available for FloPy model objects, package objects, binary dependent-variable files (head, concentration, \textit{etc.}), and cell-by-cell output files. Standard output formats that are currently supported include shapefiles \citep{environmental1998esri}, NetCDF files \citep{rew2006netcdf, rew1990netcdf}, and Visualization Tool Kit (VTK) files \citep{schroeder:2006:VTK}. Entire models, packages, individual package arrays, binary dependent-variables (\textit{e.g.}, heads), or three-dimensional representations of binary cell-by-cell data can be exported. Shapefile and VTK output can be exported for all grid types, but currently, NetCDF output can only be exported for structured grids. The NetCDF output capability has been used to convert entire models and associated output so that it can be rendered in the GWWebFlow viewer \citep{gswebflow2018}.
 
 The following Python code demonstrates the steps for exporting the \texttt{gwf} model as a VTK dataset with flat cell tops and bottoms (stair-case representation).
 
@@ -450,9 +450,9 @@ In this section, FloPy is used to construct, run, and post process a MODFLOW 6 m
 
 \subsection*{MODFLOW 6 Model Setup}
 
-To demonstrate that capabilities of FloPy and MODFLOW 6 the 6,096 m x 3,810 m model domain is discretized using a Voronoi grid, with 6,343 active cells per layer, and the discretization by vertices (DISV) package (Figure~\ref{fig:mvgrid}A). The model grid was developed using the \texttt{Triangle()} and \texttt{VoronoiGrid()} utility classes. The model grid was refined within Blue Lake, around Straight River using a 750 m buffer, and around pumping wells P1, P2, and P3 using a 100 m buffer.
+To demonstrate the capabilities of FloPy and MODFLOW 6 the 6,096 m x 3,810 m model domain is discretized using a Voronoi grid, with 6,343 active cells per layer, and the discretization by vertices (DISV) package (Figure~\ref{fig:mvgrid}A). The model grid was developed using the \texttt{Triangle()} and \texttt{VoronoiGrid()} utility classes. The model grid was refined within Blue Lake, around Straight River using a 750 m buffer, and around pumping wells P1, P2, and P3 using a 100 m buffer.
 
-In this example both groundwater flow and solute transport are simulated. To better represent solute transport, the lower aquifer has been discretized into 3 layers (instead of one). Confining units have to be explicitly simulated in MODFLOW 6, therefore, a total of six layers are simulated. The bottom of layers 1, 2, 3, and 4 were set to constant values of -1.53, -15.24, -15.55 and -30.48 m, respectively. Model layer 3 represents the confining unit and is relatively thin (0.3 m). The \texttt{IDOMAIN} concept \citep{modflow6gwf} was used to eliminate cells in model layer 3 (by setting \texttt{IDOMAIN=-1}) where the confining unit does not exist. In these areas, the thickness of layer 3 was set to zero and \texttt{IDOMAIN} was set to -1, which marks these cells in layer 3 as ``vertical pass through cells'' and results in cells in layer 2 being directly connected to cells in layer 4. 
+In this example both groundwater flow \citep{modflow6gwf} and solute transport \citep{modflow6gwt} are simulated. To better represent solute transport, the lower aquifer has been discretized into 3 layers (instead of one). Confining units have to be explicitly simulated in MODFLOW 6, therefore, a total of six layers are simulated. The bottom of layers 1, 2, 3, and 4 were set to constant values of -1.53, -15.24, -15.55 and -30.48 m, respectively. Model layer 3 represents the confining unit and is relatively thin (0.3 m). The \texttt{IDOMAIN} concept \citep{modflow6gwf} was used to eliminate cells in model layer 3 (by setting \texttt{IDOMAIN=-1}) where the confining unit does not exist. In these areas, the thickness of layer 3 was set to zero and \texttt{IDOMAIN} was set to -1, which marks these cells in layer 3 as ``vertical pass through cells'' and results in cells in layer 2 being directly connected to cells in layer 4. 
 
 The bottom of the model (layer 6) is based on \cite{hill1998} and the bottom of layer 5 was specified to be half the distance between the bottom of layers 4 and 6. The top of the model was developed from topographic contours developed for the model that was used as the starting point for \cite{hill1998} \citep{pollock2014percomm}; the top of the model is shown in Figure~\ref{fig:mvmap}A. The top of the model and the bottom of layer 6 were resampled from the data used in the structured grid model using the \texttt{.resample\_to\_grid()} method available on the \texttt{VertexGrid} for the model and linear interpolation. Figure~\ref{fig:mvxsection} shows the vertical discretization along cross-section lines A--A' and B--B', which are shown in Figure~\ref{fig:mvmap}A.
 
@@ -510,7 +510,7 @@ Simulated concentrations at the end of 30-years in all six model layers are show
 \end{figure}
 
 \section*{Summary and Conclusions} \label{sec:summary}
-FloPy is a popular Python package for building, running, and post processing groundwater models. It is open source and developed with input from a growing community of contributors. This paper summarizes important new FloPy capabilities that have been added since the package was first described by \citep{bakker2016scripting}. The new and updated capabilities can be summarized as follows.
+FloPy is a popular Python package for building, running, and post processing groundwater models. It is open source and developed with input from a growing community of contributors. This paper summarizes important new FloPy capabilities that have been added since the package was first described by \cite{bakker2016scripting}. The new and updated capabilities can be summarized as follows.
 
 \begin{itemize}
 \item FloPy supports the creation of many different types of groundwater models, including models that use MODFLOW 6, MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, MT3D, MT3D-USGS, and SEAWAT. FloPy support for MODFLOW 6 is based on an entirely new approach designed to automatically support all MODFLOW 6 models, packages, and options. The underlying FloPy classes for MODFLOW 6 are programmatically generated from the same input definition files that are used to construct the MODFLOW 6 user guide. This correspondence ensures that the FloPy classes are consistent and in-sync with MODFLOW 6 input.
