@@ -22,8 +22,18 @@ mv_contour_dict = {
     "colors": contour_color,
     "linestyles": contour_style,
 }
+mv_gwt_contour_dict = {
+    "linewidths": 0.75,
+    "colors": contour_color,
+    "linestyles": contour_style,
+}
 contour_label_dict = {
     "linewidth": 0.5,
+    "color": contour_color,
+    "linestyle": contour_style,
+}
+contour_gwt_label_dict = {
+    "linewidth": 0.75,
     "color": contour_color,
     "linestyle": contour_style,
 }
