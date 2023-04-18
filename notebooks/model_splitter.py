@@ -82,17 +82,7 @@ OBS_ID1_LUT = {
     "src": "cellid",
     "sft": "rno",
     "lkt": "lakeno",
-    "mwt": {
-        "concentration": "mawno",
-        "storage": "mawno",
-        "constant": "mawno",
-        "from-mvr": "mawno",
-        "mwt": "mawno",
-        "rate": "mawno",
-        "fw-rate": "mawno",
-        "rate-to-mvr": "wellno",
-        "fw-rate-to-mvr": "wellno"
-    },
+    "mwt": "mawno",
     "uzt": "uztno"
 }
 
@@ -839,6 +829,7 @@ class Mf6Splitter(object):
         -------
             dict
         """
+        obs_map = {"iuzno": {}}
         if isinstance(package, flopy.mf6.ModflowGwfuzf):
             packagedata = package.packagedata.array
             perioddata = package.perioddata.data
@@ -867,11 +858,16 @@ class Mf6Splitter(object):
                     for oid, nid in uzf_remap.items():
                         mvr_remap[oid] = (model.name, nid)
                         self._uzf_remaps[name][oid] = (mkey, nid)
+                        obs_map["iuzno"][oid] = (mkey, nid)
 
                     new_cellids = self._new_node_to_cellid(model, new_node, layers, idx)
                     new_recarray["cellid"] = new_cellids
                     new_recarray["iuzno"] = [uzf_remap[i] for i in new_recarray["iuzno"]]
                     new_recarray["ivertcon"] = [uzf_remap[i] for i in new_recarray["ivertcon"]]
+
+                    obs_map = self._set_boundname_remaps(
+                        new_recarray, obs_map, list(obs_map.keys()), mkey
+                    )
 
                     spd = {}
                     for per, recarray in perioddata.items():
@@ -898,7 +894,12 @@ class Mf6Splitter(object):
             mapped_data = self._remap_adv_transport(package, "iuzno", uzf_remap, mapped_data)
 
         for obspak in package.obs._packages:
-            mapped_data = self._remap_obs(obspak, mapped_data, self._uzf_remaps[name], pkg_type=package.package_type)
+            mapped_data = self._remap_obs(
+                obspak,
+                mapped_data,
+                obs_map["iuzno"],
+                pkg_type=package.package_type
+            )
 
         return mapped_data
 
@@ -1013,15 +1014,6 @@ class Mf6Splitter(object):
                     new_recarray["lakeno"] = new_lak
 
                     new_packagedata = self._remap_adv_tag(mkey, packagedata, "lakeno", lak_remaps)
-                    if "boundname" in new_packagedata.dtype.names:
-                        for bname in new_packagedata.boundname:
-                            if bname in obs_map["lakeno"]:
-                                if not isinstance(obs_map["lakeno"][bname], list):
-                                    obs_map["lakeno"][bname] = [obs_map["lakeno"][bname]]
-                                    obs_map["outleno"][bname] = [obs_map["outletno"][bname]]
-                                obs_map["outletno"][bname].append((mkey, bname))
-                            else:
-                                obs_map["outletno"][bname] = (mkey, bname)
 
                     new_tables = None
                     if tables is not None:
@@ -1041,10 +1033,18 @@ class Mf6Splitter(object):
                             new_outlets = outlets[idxs]
                             lakein = [lak_remaps[i][-1] for i in new_outlets.lakein]
                             lakeout = [lak_remaps[i][-1] if i in lak_remaps else -1 for i in new_outlets.lakeout]
+                            for nout, out in enumerate(sorted(np.unique(new_outlets.outletno))):
+                                obs_map["outletno"][out] = (mkey, nout)
+
                             outletno = list(range(len(new_outlets)))
                             new_outlets["outletno"] = outletno
                             new_outlets["lakein"] = lakein
                             new_outlets["lakeout"] = lakeout
+
+                    # set boundnames to the observation remapper
+                    obs_map = self._set_boundname_remaps(
+                        new_packagedata, obs_map, list(obs_map.keys()), mkey
+                    )
 
                     spd = {}
                     for k, recarray in perioddata.items():
@@ -1093,6 +1093,7 @@ class Mf6Splitter(object):
         -------
             dict
         """
+        obs_map = {"rno": {}}
         if isinstance(package, flopy.mf6.ModflowGwfsfr):
             packagedata = package.packagedata.array
             crosssections = package.crosssections.array
@@ -1104,7 +1105,6 @@ class Mf6Splitter(object):
             sfr_remaps = {}
             div_mvr_conn = {}
             sfr_mvr_conn = []
-
             cellids = packagedata.cellid
             layers, nodes = self._cellid_to_layer_node(cellids)
 
@@ -1129,8 +1129,12 @@ class Mf6Splitter(object):
                         sfr_remaps[rno] = (mkey, ix)
                         sfr_remaps[-1 * rno] = (mkey, -1 * ix)
                         self._sfr_remaps[name][rno] = (mkey, ix)
+                        obs_map['rno'][rno] = (mkey, ix)
 
                     new_recarray["rno"] = new_rno
+                    obs_map = self._set_boundname_remaps(
+                        new_recarray, obs_map, ['rno'], mkey
+                    )
 
                     # now let's remap connection data and tag external exchanges
                     idx = np.where(np.isin(connectiondata.rno, old_rno))[0]
@@ -1273,6 +1277,11 @@ class Mf6Splitter(object):
                 package, "rno", sfr_remap, mapped_data
             )
 
+        for obspak in package.obs._packages:
+            mapped_data = self._remap_obs(
+                obspak, mapped_data, obs_map['rno'], pkg_type=package.package_type
+            )
+
         return mapped_data
 
     def _remap_maw(self, package, mapped_data):
@@ -1289,6 +1298,7 @@ class Mf6Splitter(object):
         -------
             dict
         """
+        obs_map = {"wellno": {}}
         if isinstance(package, flopy.mf6.ModflowGwfmaw):
             connectiondata = package.connectiondata.array
             packagedata = package.packagedata.array
@@ -1316,10 +1326,15 @@ class Mf6Splitter(object):
                         maw_wellnos.append(maw)
                         maw_remaps[maw] = (mkey, nmaw)
                         self._maw_remaps[maw] = (mkey, nmaw)
+                        obs_map["wellno"][maw] = (mkey, nmaw)
 
                     new_wellno = [maw_remaps[wl][-1] for wl in new_connectiondata.wellno]
                     new_connectiondata["cellid"] = new_cellids
                     new_connectiondata["wellno"] = new_wellno
+
+                    obs_map = self._set_boundname_remaps(
+                        new_connectiondata, obs_map, ["wellno"], mkey
+                    )
 
                     new_packagedata = self._remap_adv_tag(
                         mkey, packagedata, "wellno", maw_remaps
@@ -1346,6 +1361,14 @@ class Mf6Splitter(object):
             maw_remap = self._maw_remaps[flow_package_name]
             mapped_data = self._remap_adv_transport(
                 package, "mawno", maw_remap, mapped_data
+            )
+
+        for obspak in package.obs._packages:
+            mapped_data = self._remap_obs(
+                obspak,
+                mapped_data,
+                obs_map['wellno'],
+                pkg_type=package.package_type
             )
 
         return mapped_data
@@ -1415,6 +1438,32 @@ class Mf6Splitter(object):
             mapped_data["maxsigo"] = maxsigo
 
         return mapped_data
+
+    def _set_boundname_remaps(self, recarray, obs_map, variables, mkey):
+        """
+
+        Parameters
+        ----------
+        recarray:
+        obs_map:
+        variables:
+        mkey:
+
+        Returns
+        -------
+            dict : obs_map
+        """
+        if "boundname" in recarray.dtype.names:
+            for bname in recarray.boundname:
+                for variable in variables:
+                    if bname in obs_map[variable]:
+                        if not isinstance(obs_map[variable][bname], list):
+                            obs_map[variable][bname] = [obs_map[variable][bname]]
+                        obs_map[variable][bname].append((mkey, bname))
+                    else:
+                        obs_map[variable][bname] = (mkey, bname)
+
+        return obs_map
                 
     def _set_mover_remaps(self, package, pkg_remap):
         """
@@ -1575,13 +1624,17 @@ class Mf6Splitter(object):
                             except ValueError:
                                 obsid.append(i)
 
+                        obsid = np.array(obsid, dtype=object)
                         if isinstance(obstype, dict):
                             new_cellid1 = np.full(len(recarray), None, dtype=object)
                             new_model1 = np.full(len(recarray), None, dtype=object)
-                            obstypes = [obstype for obstype in recarray.obstypes]
-                            idtype = [OBS_ID1_LUT[pkg_type][otype] for otype in obstypes]
+                            obstypes = [obstype for obstype in recarray.obstype]
+                            idtype = np.array([OBS_ID1_LUT[pkg_type][otype] for otype in obstypes], dtype=object)
                             for idt in set(idtype):
                                 remaps = remapper[idt]
+                                idx = np.where(idtype == idt)
+                                new_cellid1[idx] = [remaps[i][-1] + 1 if isinstance(i, int) else i for i in obsid[idx]]
+                                new_model1[idx] = [remaps[i][0] for i in obsid[idx]]
 
                         else:
                             new_cellid1 = np.array(
@@ -1590,22 +1643,44 @@ class Mf6Splitter(object):
                             )
                             new_model1 = np.array([remapper[i][0] for i in obsid], dtype=object)
 
-                        # check if any boundnames cross model boundaries
-                        mm_idx = [idx for idx, v in enumerate(new_model1) if isinstance(v, tuple)]
-                        for idx in mm_idx:
-                            key = new_model1[idx][-1]
-                            for mdl, bname in remapper[key]:
-                                if key in mm_keys:
-                                    mm_keys[key].append(mdl)
-                                else:
-                                    mm_keys[key] = [mdl]
-
-                        tmp_models = [new_model1[idx][0] for idx in mm_idx]
-                        new_model1[mm_idx] = tmp_models
-
                     else:
-                        # todo: need to check for boundnames and then do stuff...
-                        pass
+                        new_node1 = np.full((len(recarray),), None, dtype=object)
+                        new_model1 = np.full((len(recarray),), None, dtype=object)
+
+                        bidx = [ix for ix, i in enumerate(recarray.id) if isinstance(i, str)]
+                        idx = [ix for ix, i in enumerate(recarray.id) if not isinstance(i, str)]
+                        layers1, node1 = self._cellid_to_layer_node(recarray.id[idx])
+                        new_node1[idx] = [remapper[i][-1] for i in node1]
+                        new_model1[idx] = [remapper[i][0] for i in node1]
+                        new_node1[bidx] = [i for i in recarray.id[bidx]]
+                        new_model1[bidx] = [remapper[i][0] for i in recarray.id[bidx]]
+
+                        new_cellid1 = np.full((len(recarray, )), None, dtype=object)
+                        for mkey, model in self._model_dict.items():
+                            idx = np.where(new_model1 == mkey)
+                            idx = [ix for ix, i in enumerate(recarray.id[idx]) if not isinstance(i, str)]
+                            tmp_cellid = self._new_node_to_cellid(model, new_node1, layers1, idx)
+                            new_cellid1[idx] = tmp_cellid
+
+                        new_cellid1[bidx] = new_node1[bidx]
+
+                    # check if any boundnames cross model boundaries
+                    if isinstance(obstype, dict):
+                        remap = remapper[list(remapper.keys())[0]]
+                    else:
+                        remap = remapper
+                    mm_idx = [idx for idx, v in enumerate(new_model1) if
+                              isinstance(v, tuple)]
+                    for idx in mm_idx:
+                        key = new_model1[idx][-1]
+                        for mdl, bname in remap[key]:
+                            if key in mm_keys:
+                                mm_keys[key].append(mdl)
+                            else:
+                                mm_keys[key] = [mdl]
+
+                    tmp_models = [new_model1[idx][0] for idx in mm_idx]
+                    new_model1[mm_idx] = tmp_models
 
                 cellid2 = recarray.id2
                 conv_idx = np.where((cellid2 != None))[0]
@@ -1620,14 +1695,16 @@ class Mf6Splitter(object):
                                 cellid2 = [(0, cid[1]) if cid is not None else None for cid in cellid2]
 
                         node2 = self._modelgrid.get_node(list(cellid2[conv_idx]))
-                        new_node2 = []
-                        new_model2 = []
+                        new_node2 = np.full((len(recarray),), None, dtype=object)
+                        new_model2 = np.full((len(recarray),), None, dtype=object)
+
+                        new_node2[conv_idx] = [remapper[i][-1] for i in node2]
+                        new_model2[conv_idx] = [remapper[i][0] for i in node2]
                         for ix in range(len(recarray)):
                             if ix in conv_idx:
-                                new_node2.append(remapper[ix][-1])
-                                new_model2.append(remapper[ix][0])
+                                continue
                             else:
-                                new_node2.append(remapper[ix][0])
+                                new_node2.append(None)
                                 new_model2.append(new_model1[ix])
 
                         if not np.allclose(new_model1, new_model2):
@@ -1651,14 +1728,28 @@ class Mf6Splitter(object):
                         obstype = OBS_ID2_LUT[pkg_type]
                         if obstype is None:
                             new_cellid2 = cellid2
-                            new_model2 = new_model1
                         else:
-                            # todo: do stuff
-                            pass
+                            obsid = []
+                            for i in recarray.id2:
+                                try:
+                                    obsid.append(int(i) - 1)
+                                except ValueError:
+                                    obsid.append(i)
+                            if isinstance(obstype, dict):
+                                new_cellid2 = np.full(len(recarray), None, dtype=object)
+                                obstypes = [obstype for obstype in recarray.obstype]
+                                idtype = np.array([OBS_ID2_LUT[pkg_type][otype] for otype in obstypes], dtype=object)
+                                for idt in set(idtype):
+                                    if idt is None:
+                                        continue
+                                    remaps = remapper[idt]
+                                    idx = np.where(idtype == idt)
+                                    new_cellid2[idx] = [remaps[i][-1] + 1 if isinstance(i, int) else i for i in obsid[idx]]
+                            else:
+                                new_cellid2 = np.array([remapper[i][-1] + 1 if isinstance(i, int) else i for i in obsid], dtype=object)
 
                 else:
                     new_cellid2 = cellid2
-                    new_model2 = new_model1
 
                 for mkey in self._model_dict.keys():
                     # adjust model numbers if boundname crosses models
@@ -2059,6 +2150,11 @@ class Mf6Splitter(object):
         d = {}
         built = []
         nmodels = list(self._model_dict.keys())
+        if self._model.name_file.newtonoptions is not None:
+            newton = self._model.name_file.newtonoptions.array
+        else:
+            newton = None
+
         if self._model_type.lower() == "gwf":
             exchgtype = "GWF6-GWF6"
             extension = "gwfgwf"
@@ -2102,7 +2198,8 @@ class Mf6Splitter(object):
                             exgmnameb=mname1,
                             nexg=len(exchange_data),
                             exchangedata=exchange_data,
-                            filename=f"sim_{m0}_{m1}.{extension}"
+                            filename=f"sim_{m0}_{m1}.{extension}",
+                            newton=newton
                         )
                         d[f"{mname0}_{mname1}"] = exchg
 
@@ -2214,7 +2311,8 @@ class Mf6Splitter(object):
                             auxiliary=["ANGLDEGX", "CDIST"],
                             nexg=len(exchange_data),
                             exchangedata=exchange_data,
-                            filename=f"sim_{m0}_{m1}.{extension}"
+                            filename=f"sim_{m0}_{m1}.{extension}",
+                            newton=newton
                         )
                         d[f"{mname0}_{mname1}"] = exchg
 
