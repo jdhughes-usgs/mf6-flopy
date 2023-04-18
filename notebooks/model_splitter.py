@@ -212,6 +212,34 @@ class Mf6Splitter(object):
             self._sim_mover_data = {}
             self._offsets = {}
 
+    @property
+    def original_modelgrid(self):
+        """
+        Method to return the original model's modelgrid object. This is
+        used for re-assembling the split models when analyzing output
+
+        """
+        return self._modelgrid
+
+    def reconstruct_array(self, arrays):
+        """
+        Method to reconstruct model output arrays into a single array
+        with the dimensions of the original model
+
+        arrays : dict
+            dictionary of model number and the associated array
+
+        Returns
+        -------
+            np.ndarray of original model shape
+        """
+
+
+        arr = np.zeros(self._modelgrid.shape)
+
+
+        return
+
     def _remap_nodes(self, array):
         """
         Method to remap existing nodes to new models
@@ -2152,6 +2180,8 @@ class Mf6Splitter(object):
         nmodels = list(self._model_dict.keys())
         if self._model.name_file.newtonoptions is not None:
             newton = self._model.name_file.newtonoptions.array
+            if isinstance(newton, list):
+                newton = True
         else:
             newton = None
 
