@@ -12,17 +12,17 @@ contour_dict = {
     "colors": contour_color,
     "linestyles": contour_style,
 }
-mv_contour_dict = {
+sv_contour_dict = {
     "linewidths": 0.5,
     "colors": contour_color,
     "linestyles": contour_style,
 }
-mv_contour_dict = {
+sv_contour_dict = {
     "linewidths": 0.5,
     "colors": contour_color,
     "linestyles": contour_style,
 }
-mv_gwt_contour_dict = {
+sv_gwt_contour_dict = {
     "linewidths": 0.75,
     "colors": contour_color,
     "linestyles": contour_style,
@@ -61,7 +61,7 @@ lake_cmap = colors.ListedColormap(["cyan"])
 clay_cmap = colors.ListedColormap(["brown"])
 
 intersection_cmap = "Pastel2"
-temp_cmap = mpl.cm.get_cmap(intersection_cmap)
+temp_cmap = mpl.colormaps[intersection_cmap]
 intersection_rgba = temp_cmap(0)
 
 boundary = """1.868012422360248456e+05 4.695652173913043953e+04

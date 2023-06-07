@@ -1,8 +1,8 @@
 import numpy as np
 import flopy
-import pandas as pd
 from flopy.mf6.mfbase import PackageContainer
-import matplotlib.pyplot as plt
+from flopy.plot.plotutil import UnstructuredPlotUtilities
+import collections
 import inspect
 
 
@@ -133,6 +133,7 @@ class Mf6Splitter(object):
             self._model_type = self._model_type[:-1]
         self._modelgrid = self._model.modelgrid
         self._node_map = {}
+        self._node_map_r = {}
         self._new_connections = None
         self._new_ncpl = None
         self._grid_info = None
@@ -195,6 +196,7 @@ class Mf6Splitter(object):
         if remap_nodes:
             self._modelgrid = self._model.modelgrid
             self._node_map = {}
+            self._node_map_r = {}
             self._new_connections = None
             self._new_ncpl = None
             self._grid_info = None
@@ -211,6 +213,18 @@ class Mf6Splitter(object):
             self._mover_remaps = {}
             self._sim_mover_data = {}
             self._offsets = {}
+
+    @property
+    def reversed_node_map(self):
+        """
+        Returns a lookup table of {model number : {model node: original node}}
+
+        """
+        if not self._node_map_r:
+            self._node_map_r = {mkey: {} for mkey in self._model_dict.keys()}
+            for onode, (mkey, nnode) in self._node_map.items():
+                self._node_map_r[mkey][nnode] = onode
+        return self._node_map_r
 
     @property
     def original_modelgrid(self):
@@ -233,12 +247,144 @@ class Mf6Splitter(object):
         -------
             np.ndarray of original model shape
         """
+        test_arr = arrays[list(arrays.keys())[0]].ravel()
+        if test_arr.size == self._modelgrid.size:
+            nlay = self._modelgrid.nlay
+            shape = self._modelgrid.shape
 
+        elif test_arr.size == self._modelgrid.ncpl:
+            nlay = 1
+            shape = (self._modelgrid.nrow, self._modelgrid.ncol)
+        else:
+            raise AssertionError("Arrays are not the proper size")
 
-        arr = np.zeros(self._modelgrid.shape)
+        new_array = np.zeros(shape, dtype=test_arr.dtype)
+        new_array = new_array.ravel()
+        oncpl = self._modelgrid.ncpl
 
+        for mkey, array in arrays.items():
+            array = array.ravel()
+            ncpl = self._new_ncpl[mkey]
+            mapping = self._grid_info[mkey][-1]
+            old_nodes = np.where(mapping != -1)
+            new_nodes = mapping[old_nodes]
 
-        return
+            old_nodes = np.tile(old_nodes, (nlay, 1))
+            old_adj_array = np.arange(nlay, dtype=int) * ncpl
+            old_adj_array = np.expand_dims(old_adj_array, axis=1)
+            old_nodes += old_adj_array
+            old_nodes = old_nodes.ravel()
+
+            new_nodes = np.tile(new_nodes, (nlay, 1))
+            new_adj_array = np.arange(nlay, dtype=int) * oncpl
+            new_adj_array = np.expand_dims(new_adj_array, axis=1)
+            new_nodes += new_adj_array
+            new_nodes = new_nodes.ravel()
+
+            new_array[new_nodes] = array[old_nodes]
+
+        new_array.shape = shape
+        return new_array
+
+    def reconstruct_recarray(self, recarrays):
+        """
+        Method to reconstruct model recarrays into a single recarray
+        that represents the original model data
+
+        Parameters
+        ----------
+        recarrays : dict
+            dictionary of model number and recarray
+
+        Returns
+        -------
+            np.recarray
+        """
+        rlen = 0
+        dtype = None
+        for recarray in recarrays.values():
+            rlen += len(recarray)
+            dtype = recarray.dtype
+            if "cellid" not in recarray.dtype.names:
+                raise AssertionError("cellid must be present in recarray")
+
+        if rlen == 0:
+            return
+
+        new_recarray = np.recarray((rlen,), dtype=dtype)
+        idx = 0
+        for mkey, recarray in recarrays.items():
+            remapper = self.reversed_node_map[mkey]
+            orec = recarray.copy()
+            modelgrid = self._model_dict[mkey].modelgrid
+            if self._modelgrid.grid_type in ("structured", "vertex"):
+                layer = [i[0] for i in orec.cellid]
+                if self._modelgrid.grid_type == "structured":
+                    cellid = [(0, i[1], i[2]) for i in orec.cellid]
+                    node = modelgrid.get_node(cellid)
+                else:
+                    node = [i[-1] for i in orec.cellid]
+            else:
+                node = [i[0] for i in orec.cellid]
+
+            new_node = [remapper[i] for i in node if i in remapper]
+
+            if modelgrid.grid_type == "structured":
+                new_cellid = self._modelgrid.get_lrc(new_node)
+                new_cellid = [(layer[ix], i[1], i[2]) for ix, i in enumerate(new_cellid)]
+            elif modelgrid.grid_type == "vertex":
+                new_cellid = [(layer[ix], i) for ix, i in enumerate(new_node)]
+            else:
+                new_cellid = [(i,) for i in new_node]
+
+            orec["cellid"] = new_cellid
+            new_recarray[idx:idx + len(orec)] = orec[:]
+            idx += len(orec)
+
+        return new_recarray
+
+    def recarray_bc_array(self, recarray, pkgtype=None, color="c"):
+        """
+        Method to take a reconstructed recarray and create a plottable
+        boundary condition location array from it.
+
+        Parameters
+        ----------
+        recarray : np.recarray
+        pkgtype : str
+            optional package type. used to apply flopy's default color to
+            package
+
+        Returns
+        -------
+        tuple: numpy array and a dict of matplotlib kwargs
+
+        """
+        import matplotlib
+
+        bc_array = np.zeros(self._modelgrid.shape, dtype=int)
+        idx = tuple(zip(*recarray.cellid))
+        if len(idx) == 1:
+            bc_array[list(idx)] = 1
+        else:
+            bc_array[idx] = 1
+        bc_array = np.ma.masked_equal(bc_array, 0)
+        if pkgtype is not None:
+            key = pkgtype[:3].upper()
+            if key in flopy.plot.plotutil.bc_color_dict:
+                color = flopy.plot.plotutil.bc_color_dict[key]
+            else:
+                color = flopy.plot.plotutil.bc_color_dict["default"]
+        elif color is not None:
+            pass
+        else:
+            color = flopy.plot.plotutil.bc_color_dict["default"]
+
+        cmap = matplotlib.colors.ListedColormap(["0", color])
+        bounds = [0, 1, 2]
+        norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
+
+        return bc_array, {"cmap": cmap, "norm": norm}
 
     def _remap_nodes(self, array):
         """
@@ -255,7 +401,10 @@ class Mf6Splitter(object):
         if self._modelgrid.iverts is None:
             self._map_iac_ja_connections()
         else:
-             self._map_connections()
+             self._connection = self._modelgrid.neighbors(
+                 reset=True, method="rook"
+             )
+             self._connection_ivert = self._modelgrid._edge_set
 
         grid_info = {}
         if self._modelgrid.grid_type == "structured":
@@ -264,7 +413,7 @@ class Mf6Splitter(object):
                 cells = np.where(a == m)
                 rmin, rmax = np.min(cells[0]), np.max(cells[0])
                 cmin, cmax = np.min(cells[1]), np.max(cells[1])
-                cells = list(zip(cells[0], cells[1]))
+                cellids = list(zip([0] * len(cells[0]), cells[0], cells[1]))
                 self._offsets[m] = {
                     "xorigin": self._modelgrid.xvertices[rmax + 1, cmin],
                     "yorigin": self._modelgrid.yvertices[rmax + 1, cmin]
@@ -273,26 +422,25 @@ class Mf6Splitter(object):
                 nrow = (rmax - rmin) + 1
                 ncol = (cmax - cmin) + 1
                 mapping = np.ones((nrow, ncol), dtype=int) * -1
-                for ix, oix in enumerate(range(rmin, rmax + 1)):
-                    for jx, jix in enumerate(range(cmin, cmax + 1)):
-                        if (oix, jix) in cells:
-                            onode = self._modelgrid.get_node((0, oix, jix))[0]
-                            mapping[ix, jx] = onode
+                nodes = self._modelgrid.get_node(cellids)
+                mapping[cells[0] - rmin, cells[1] - cmin] = nodes
                 grid_info[m] = [(nrow, ncol), (rmin, rmax), (cmin, cmax),
                                 np.ravel(mapping)]
         else:
-            xverts, yverts = self._irregular_shape_patch(
+            xverts, yverts = UnstructuredPlotUtilities.irregular_shape_patch(
                 self._modelgrid.xvertices,
                 self._modelgrid.yvertices
             )
             for m in np.unique(array):
-                cells = np.where(array == m)
-                grid_info[m] = [(len(cells[0]),), None, None, None]
+                cells = np.where(array == m)[0]
+                mapping = np.zeros((len(cells,)), dtype=int)
+                mapping[:] = cells
+                grid_info[m] = [(len(cells),), None, None, mapping]
 
                 # calculate grid offsets
                 if xverts is not None:
-                    mxv = xverts[cells[0]]
-                    myv = yverts[cells[0]]
+                    mxv = xverts[cells]
+                    myv = yverts[cells]
                     xmidx = np.where(mxv == np.nanmin(mxv))[0]
                     myv = myv[xmidx]
                     ymidx = np.where(myv == np.nanmin(myv))[0]
@@ -313,10 +461,15 @@ class Mf6Splitter(object):
         for mdl in np.unique(array):
             mnodes = np.where(array == mdl)[0]
             mg_info = grid_info[mdl]
-            for nnode, onode in enumerate(mnodes):
-                if mg_info[-1] is not None:
-                    nnode = np.where(mg_info[-1] == onode)[0][0]
-                self._node_map[onode] = (mdl, nnode)
+            if mg_info is not None:
+                mapping = mg_info[-1]
+                new_nodes = np.where(mapping != -1)[0]
+                old_nodes = mapping[new_nodes]
+                for ix, nnode in enumerate(new_nodes):
+                    self._node_map[old_nodes[ix]] = (mdl, nnode)
+            else:
+                for nnode, onode in enumerate(mnodes):
+                    self._node_map[onode] = (mdl, nnode)
 
         new_connections = {i: {"internal": {},
                                "external": {}
@@ -359,6 +512,7 @@ class Mf6Splitter(object):
                             (cmdl, cnnode)
                         )
                         if self._connection_ivert is not None:
+                            tmp = self._connection_ivert[node]
                             exchange_meta[mdl][nnode][cnnode] = \
                                 [node, cnode, self._connection_ivert[node][ix]]
                         else:
@@ -401,9 +555,8 @@ class Mf6Splitter(object):
         """
         conn = {}
         uconn = {}
-        # todo: put in PR removing the MFArray component in UnstructuredGrid
-        iac = self._model.disu.iac.array
-        ja = self._model.disu.ja.array
+        iac = self._modelgrid.iac
+        ja = self._modelgrid.ja
         cl12 = self._model.disu.cl12.array
         ihc = self._model.disu.ihc.array
         hwva = self._model.disu.hwva.array
@@ -421,39 +574,6 @@ class Mf6Splitter(object):
 
         self._connection = conn
         self._uconnection = uconn
-
-    def _map_connections(self):
-        """
-        Method to map connections between model cells
-        """
-        iverts = self._modelgrid.iverts
-        iverts = self._irregular_shape_patch(iverts)  # todo: adapt flopy's plotutil
-        iv_r = iverts[:, ::-1]
-
-        conn = {}
-        connivert = {}
-        # todo: try updating neighbors with this change for speed improvements
-        for node, iv in enumerate(iverts):
-            cells = []
-            vix = []
-            for i in range(1, len(iv)):
-                i0 = i - 1
-                if iv[i] == iv[i0]:
-                    continue
-                for ii in range(1, len(iv)):
-                    ii0 = ii - 1
-                    idxn = np.where(
-                        (iv_r[:, ii0] == iv[i0]) & (iv_r[:, ii] == iv[i]))
-                    if len(idxn[0]) > 0:
-                        for n in idxn[0]:
-                            if n != node:
-                                cells.append(n)
-                                vix.append((iv[i0], iv[i]))
-
-            conn[node] = np.array(cells)
-            connivert[node] = vix
-        self._connection = conn
-        self._connection_ivert = connivert
 
     def _map_verts_iverts(self, array):
         """
@@ -494,67 +614,6 @@ class Mf6Splitter(object):
             ivlut[mkey]["vertices"] = new_verts
 
         self._ivert_vert_remap = ivlut
-
-    def _irregular_shape_patch(self, xverts, yverts=None):
-        """
-        DEPRECATED: remove and adapt plot_util's in final version
-
-        Patch for vertex cross section plotting when
-        we have an irregular shape type throughout the
-        model grid or multiple shape types.
-
-        Parameters
-        ----------
-        xverts : list
-            xvertices
-        yverts : list
-            yvertices
-
-        Returns
-        -------
-            xverts, yverts as np.ndarray
-
-        """
-        max_verts = 0
-
-        for xv in xverts:
-            if len(xv) > max_verts:
-                max_verts = len(xv)
-
-        if yverts is not None:
-            for yv in yverts:
-                if len(yv) > max_verts:
-                    max_verts = len(yv)
-
-        adj_xverts = []
-        for xv in xverts:
-            if len(xv) < max_verts:
-                xv = list(xv)
-                n = max_verts - len(xv)
-                adj_xverts.append(xv + [xv[-1]] * n)
-            else:
-                adj_xverts.append(xv)
-
-        if yverts is not None:
-            adj_yverts = []
-            for yv in yverts:
-                if len(yv) < max_verts:
-                    yv = list(yv)
-                    n = max_verts - len(yv)
-                    adj_yverts.append(yv + [yv[-1]] * n)
-                else:
-                    adj_yverts.append(yv)
-
-            xverts = np.array(adj_xverts)
-            yverts = np.array(adj_yverts)
-
-            return xverts, yverts
-
-        txverts = np.array(adj_xverts)
-        xverts = np.zeros((txverts.shape[0], txverts.shape[1] + 1), dtype=int)
-        xverts[:, 0:-1] = txverts
-        xverts[:, -1] = xverts[:, 0]
-        return xverts
 
     def _create_sln_tdis(self):
         """
@@ -620,7 +679,9 @@ class Mf6Splitter(object):
 
             recarray = cell2d[idx]
             recarray["icell2d"] = range(len(recarray))
-            iverts = self._irregular_shape_patch(self._ivert_vert_remap[mkey]["iverts"]).T
+            iverts = UnstructuredPlotUtilities.irregular_shape_patch(
+                self._ivert_vert_remap[mkey]["iverts"]
+            ).T
             for ix, ivert_col in enumerate(iverts[:-1]):
                 recarray[f"icvert_{ix}"] = ivert_col
 
@@ -733,17 +794,29 @@ class Mf6Splitter(object):
 
         original_arr = mfarray.ravel()
         dtype = original_arr.dtype
-        for layer in range(nlay):
-            for node, (mkey, new_node) in self._node_map.items():
-                node = node + (layer * ncpl)
-                new_ncpl = self._new_ncpl[mkey]
-                new_node = new_node + (layer * new_ncpl)
-                value = original_arr[node]
 
-                if item not in mapped_data[mkey]:
-                    mapped_data[mkey][item] = np.zeros(new_ncpl * nlay, dtype=dtype)
+        for mkey in self._model_dict.keys():
+            new_ncpl = self._new_ncpl[mkey]
+            new_array = np.zeros(new_ncpl * nlay, dtype=dtype)
+            mapping = self._grid_info[mkey][-1]
+            new_nodes = np.where(mapping != -1)
+            old_nodes = mapping[new_nodes]
 
-                mapped_data[mkey][item][new_node] = value
+            old_nodes = np.tile(old_nodes, (nlay, 1))
+            old_adj_array = np.arange(nlay, dtype=int) * ncpl
+            old_adj_array = np.expand_dims(old_adj_array, axis=1)
+            old_nodes += old_adj_array
+            old_nodes = old_nodes.ravel()
+
+            new_nodes = np.tile(new_nodes, (nlay, 1))
+            new_adj_array = np.arange(nlay, dtype=int) * new_ncpl
+            new_adj_array = np.expand_dims(new_adj_array, axis=1)
+            new_nodes += new_adj_array
+            new_nodes = new_nodes.ravel()
+
+            new_array[new_nodes] = original_arr[old_nodes]
+
+            mapped_data[mkey][item] = new_array
 
         return mapped_data
 
@@ -1997,8 +2070,6 @@ class Mf6Splitter(object):
         -------
             dict
         """
-        # todo: child packages??? This is an issue that still needs solving.
-
         mapped_data = {mkey: {} for mkey in self._model_dict.keys()}
 
         # check to see if the package has active movers
@@ -2185,12 +2256,17 @@ class Mf6Splitter(object):
         else:
             newton = None
 
+        if self._model.npf.xt3doptions is not None:
+            xt3d = self._model.npf.xt3doptions.array
+            if isinstance(xt3d, list):
+                xt3d = True
+        else:
+            xt3d = None
+
         if self._model_type.lower() == "gwf":
-            exchgtype = "GWF6-GWF6"
             extension = "gwfgwf"
             exchgcls = flopy.mf6.ModflowGwfgwf
         elif self._model_type.lower() == "gwt":
-            exchgtype = "GWT6-GWT6"
             extension = "gwtgwt"
             exchgcls = flopy.mf6.ModflowGwtgwt
         else:
@@ -2222,14 +2298,13 @@ class Mf6Splitter(object):
                         mname1 = self._model_dict[m1].name
                         exchg = exchgcls(
                             self._new_sim,
-                            exgtype=exchgtype,
-                            # todo open an issue about this! This should be explicitly set when running create_package.py!
                             exgmnamea=mname0,
                             exgmnameb=mname1,
                             nexg=len(exchange_data),
                             exchangedata=exchange_data,
                             filename=f"sim_{m0}_{m1}.{extension}",
-                            newton=newton
+                            newton=newton,
+                            xt3d=xt3d
                         )
                         d[f"{mname0}_{mname1}"] = exchg
 
@@ -2254,6 +2329,8 @@ class Mf6Splitter(object):
                     modelgrid1 = self._model_dict[m1].modelgrid
                     ncpl0 = modelgrid0.ncpl
                     ncpl1 = modelgrid1.ncpl
+                    idomain0 = modelgrid0.idomain
+                    idomain1 = modelgrid1.idomain
                     exchange_data = []
                     for node0, exg_list in exg_nodes.items():
                         for exg in exg_list:
@@ -2274,11 +2351,11 @@ class Mf6Splitter(object):
                                     cellidm0 = node0
                                     cellidm1 = node1
 
-                                if modelgrid0.idomain is not None:
-                                    if modelgrid0.idomain[cellidm0] <= 0:
+                                if idomain0 is not None:
+                                    if idomain0[cellidm0] <= 0:
                                         continue
-                                if modelgrid1.idomain is not None:
-                                    if modelgrid1.idomain[cellidm1] <= 0:
+                                if idomain1 is not None:
+                                    if idomain1[cellidm1] <= 0:
                                         continue
                                 # calculate CL1, CL2 from exchange metadata
                                 meta = self._exchange_metadata[m0][node0][node1]
@@ -2335,14 +2412,14 @@ class Mf6Splitter(object):
                         mname1 = self._model_dict[m1].name
                         exchg = exchgcls(
                             self._new_sim,
-                            exgtype=exchgtype, # todo open an issue about this! This should be explicitly set when running create_package.py!
                             exgmnamea=mname0,
                             exgmnameb=mname1,
                             auxiliary=["ANGLDEGX", "CDIST"],
                             nexg=len(exchange_data),
                             exchangedata=exchange_data,
                             filename=f"sim_{m0}_{m1}.{extension}",
-                            newton=newton
+                            newton=newton,
+                            xt3d=xt3d
                         )
                         d[f"{mname0}_{mname1}"] = exchg
 
@@ -2410,7 +2487,6 @@ class Mf6Splitter(object):
 
 
 # todo: development notes:
-#   Package obs...
 #   Then set up checks for model splitting
 #       (ex. doesnt parallel a fault, doesnt cut through a lake, active cells in modelgrid...)
-#   Finally deal with subpackages...
+#   Finally deal with other subpackages...

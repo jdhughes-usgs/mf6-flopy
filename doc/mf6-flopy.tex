@@ -13,7 +13,6 @@
 									
 \usepackage{amssymb}
 \usepackage{lineno}
-\linenumbers
 \usepackage{setspace}
 \doublespacing
 \usepackage{authblk}
@@ -119,7 +118,7 @@ xleftmargin=0.5cm,
 \clubpenalty10000
 \setlength\parindent{2em}
 
-\title{Research Paper/ \\FloPy Workflows for Creating and Constructing Structured and Unstructured MODFLOW 6 Models} 
+\title{Research Paper/ \\FloPy Workflows for Creating Structured and Unstructured MODFLOW Models} 
 
 \maketitle
 
@@ -424,13 +423,13 @@ gwf.export("temp_vtk/vtk_staircase", fmt='vtk', smooth=False,
            vertical_exageration=500.0, pvd=True)
 \end{python}
 
-\noindent VTK models can also be exported with smooth cell tops and bottoms using elevations interpolated to the cell vertices (\texttt{smooth=True}). Other supported export formats can be created by specifying the file extension to be \texttt{.shp} for shapefiles, \texttt{.nc} for NetCDF files, or if the \texttt{fmt} keyword is \texttt{vtk} (as shown above) for VTK files. Figure~\ref{fig:flopyvtk} shows staircase and smooth VTK exports of the model described in the~\nameref{sec:plotting} section and rendered with ParaView \citep{ahrens2005paraview}.
+\noindent VTK models can also be exported with smooth cell tops and bottoms using elevations interpolated to the cell vertices (\texttt{smooth=True}). Other supported export formats can be created by specifying the file extension to be \texttt{.shp} for shapefiles, \texttt{.nc} for NetCDF files, or if the \texttt{fmt} keyword is \texttt{vtk} (as shown above) for VTK files. Figure~\ref{fig:flopyvtk} shows staircase and smooth VTK exports of the model described in the~\nameref{sec:plotting} section and rendered with ParaView \citep{AHRENS2005717}.
 
 \begin{figure}[ht!]
 	\begin{center}
 		\includegraphics{figures/mf6vtk.pdf}
 	\end{center}
-	\caption{Two different graphical renderings of the Voronoi model grid: (A) staircase representation in which cell have flat tops and bottoms and (B) smooth representation in which elevations for cell vertices are interpolated using cell top and bottom elevations. Renderings were created using ParaView \citep{ahrens2005paraview} and Visualization Tool Kit \citep{schroeder:2006:VTK} files exported from FloPy.}
+	\caption{Two different graphical renderings of the Voronoi model grid: (A) staircase representation in which cell have flat tops and bottoms and (B) smooth representation in which elevations for cell vertices are interpolated using cell top and bottom elevations. Renderings were created using ParaView \citep{AHRENS2005717} and Visualization Tool Kit \citep{schroeder:2006:VTK} files exported from FloPy.}
 	\label{fig:flopyvtk}
 \end{figure}
 
@@ -444,7 +443,7 @@ In this section, FloPy is used to construct, run, and post process a MODFLOW 6 m
 
 \begin{figure}[ht!]
 	\begin{center}
-		\includegraphics{figures/mv_voronoi_river_discretization.pdf}
+		\includegraphics{figures/sv_voronoi_river_discretization.pdf}
 	\end{center}
 	\caption{Synthetic Valley model used to demonstrate the MODFLOW 6 capabilities of FloPy. (A) Map showing the Voronoi grid used to discretize the model domain and the location of Blue Lake, Straight River, and the areal extent of the confining unit separating the upper and lower aquifer units. (B) Map showing model cells intersecting the northern end of Straight River. (C) Map showing model cells intersecting the southern end of Straight River. The cell centroid and cell numbers in the inset areas at the northern and southern end of Straight River are also shown on (B) and (C).}
 	\label{fig:mvgrid}
@@ -460,7 +459,7 @@ The bottom of the model (layer 6) is based on \cite{hill1998} and the bottom of 
 
 \begin{figure}[ht!]
 	\begin{center}
-		\includegraphics{figures/mv_voronoi_map.pdf}
+		\includegraphics{figures/sv_voronoi_map.pdf}
 	\end{center}
 	\caption{Map showing Synthetic Valley model (A) topography and (B) simulated steady-state heads and specific discharge rates in model layer 1. Cross-section lines A--A' and B--B' shown in Figure~\ref{fig:mvxsection} are also shown on (A).}
 	\label{fig:mvmap}
@@ -468,7 +467,7 @@ The bottom of the model (layer 6) is based on \cite{hill1998} and the bottom of 
 
 \begin{figure}[ht!]
 	\begin{center}
-		\includegraphics{figures/mv_voronoi_xsection.pdf}
+		\includegraphics{figures/sv_voronoi_xsection.pdf}
 	\end{center}
 	\caption{Cross-section of Synthetic Valley model grid and simulated steady-state heads along cross-section line (A) A--A' and (B) B--B'. The simulated Blue Lake steady-state stage (3.46 m) and pumping well P-2 are also shown on (A).}
 	\label{fig:mvxsection}
@@ -505,7 +504,7 @@ Simulated concentrations at the end of 30-years in all six model layers are show
 
 \begin{figure}[ht!]
 	\begin{center}
-		\includegraphics{figures/mv_voronoi_map_concentration.pdf}
+		\includegraphics{figures/sv_voronoi_map_concentration.pdf}
 	\end{center}
 	\caption{Maps showing Synthetic Valley simulated concentrations at the end of 30 years in model layer (A) 1, (B) 2, (C) 3, (D) 4, (E) 5, and (F) 6. The extent of the confining unit in model layer 3 is also shown on (C).}
 	\label{fig:mvconc}
